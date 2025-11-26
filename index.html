@@ -306,7 +306,7 @@
             opponentXId = generateRandomXId(isCPU);
             const opponentType = isCPU ? 'CPU (テスト用)' : '匿名ユーザー';
 
-            // 自分と相手の情報を表示
+            // 自分と相手の情報を表示 (Match Result Screen)
             document.getElementById('myInfoDisplay').innerHTML = 
                 `ID: **${PLAYER_ID}**<br>R: ${Math.round(playerRating)}`;
             document.getElementById('opponentInfo').innerHTML = 
@@ -326,7 +326,7 @@
             showScreen('matchResultScreen');
         }
 
-        // 結果申告画面へ遷移
+        // 結果申告画面へ遷移 (修正点: 相手ID表示を追加)
         function goToResultSubmission() {
             const submissionList = document.getElementById('submissionSongs');
             submissionList.innerHTML = '';
@@ -336,10 +336,17 @@
                 li.textContent = song;
                 submissionList.appendChild(li);
             });
+            
+            // 相手のIDを表示
+            const opponentDisplay = document.getElementById('opponentDisplayInSubmission');
+            if (opponentDisplay) {
+                 opponentDisplay.textContent = `対戦相手: ${opponentXId}`;
+            }
+            
             showScreen('resultSubmissionScreen');
         }
 
-        // 結果申告とレーティング計算 (確認ダイアログを追加)
+        // 結果申告とレーティング計算
         function submitResult(playerResultScore) {
             let resultAction = "";
             if (playerResultScore === 1) resultAction = "勝利";
@@ -347,7 +354,7 @@
             else resultAction = "引き分け";
 
             // 確認ダイアログ
-            if (!confirm(`対戦結果を「${resultAction}」で申告します。よろしいですか？\n(リザルト交換に基づき、間違いのないよう確認してください)`)) {
+            if (!confirm(`対戦結果を「${resultAction}」で申告します。よろしいですか？\n(対戦相手ID: ${opponentXId})`)) {
                 return; // キャンセルの場合、処理を中断
             }
 
@@ -430,3 +437,4 @@
 
 </body>
 </html>
+
