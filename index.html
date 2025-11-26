@@ -22,9 +22,20 @@
             max-width: 600px;
             margin: 0 auto;
             min-height: 400px;
-            display: flex;
+            display: none; /* 初期は非表示 */
             flex-direction: column;
             justify-content: center;
+            
+            /* --- アニメーション用設定 --- */
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+
+        /* アニメーション表示状態 */
+        .screen.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         h1 { color: #e44d26; } /* 太鼓の赤 */
@@ -70,8 +81,11 @@
         .music-list {
             list-style: none;
             padding: 0;
-            font-size: 1.2em;
+            font-size: 1.1em;
             margin: 20px 0;
+            text-align: left;
+            width: 80%;
+            margin: 20px auto;
         }
 
         .music-list li {
@@ -105,6 +119,29 @@
             margin-bottom: 15px;
             color: #555;
         }
+        
+        /* レート変動アニメーション用 */
+        .delta-rate-change {
+            font-weight: bold;
+            transition: all 0.5s ease;
+            display: inline-block;
+        }
+        
+        .player-detail-table {
+            width: 90%;
+            margin: 15px auto;
+            border-collapse: collapse;
+            font-size: 1.2em;
+        }
+        .player-detail-table th, .player-detail-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px dashed #ccc;
+        }
+        .player-detail-table th {
+            width: 30%;
+            color: #e44d26;
+        }
     </style>
 </head>
 <body>
@@ -120,27 +157,41 @@
         <button onclick="startMatch('cpu')">CPUとマッチング (テスト用)</button>
     </div>
 
-    <div id="matchResultScreen" class="screen" style="display: none;">
-        <h2>🎉 マッチング成立！今日の対戦曲 🎉</h2>
-        <div id="opponentInfo" class="opponent-info"></div>
+    <div id="matchResultScreen" class="screen">
+        <h2>🎉 マッチング成立！</h2>
+        
+        <table class="player-detail-table">
+            <tr>
+                <th>あなた (Player)</th>
+                <td id="myInfoDisplay"></td>
+            </tr>
+            <tr>
+                <th>対戦相手 (Rival)</th>
+                <td id="opponentInfo"></td>
+            </tr>
+        </table>
+
+        <h3>今日の課題曲 (3曲)</h3>
         <ul id="selectedSongs" class="music-list">
             </ul>
         <button onclick="goToResultSubmission()">リザルト交換・結果申告へ</button>
     </div>
 
-    <div id="resultSubmissionScreen" class="screen" style="display: none;">
+    <div id="resultSubmissionScreen" class="screen">
         <h2>🗳️ 試合結果の申告 🗳️</h2>
         <p>対戦相手とX (DM) でリザルト画像を交換し、**3曲合計の良の数**で勝敗を確定した後、結果を選択してください。</p>
-        <p id="matchInfoForSubmission" style="font-weight: bold; color: #007bff; margin: 15px 0;"></p>
+        
+        <h3 style="color: #007bff; margin-top: 25px;">確認: 今回の課題曲</h3>
+        <ul id="submissionSongs" class="music-list">
+             </ul>
 
         <div style="margin-top: 30px;">
             <button id="btnWin" class="result-button" onclick="submitResult(1)">勝利 (Win)</button>
-            <button id="btnLoss" class="result-button" onclick="submitResult(0)">敗北 (Loss)</button>
-            <button id="btnDraw" class="result-button" onclick="submitResult(0.5)">引き分け (Draw)</button>
+            <button id="btnLoss" class="result-button" onclick="submitResult(0)">敗北 (Lose)</button> <button id="btnDraw" class="result-button" onclick="submitResult(0.5)">引き分け (Draw)</button>
         </div>
     </div>
     
-    <div id="resultScreen" class="screen" style="display: none;">
+    <div id="resultScreen" class="screen">
         <h2 id="resultHeading"></h2>
         <p>対戦結果が申告されました。レーティングが変動します。</p>
         
@@ -159,14 +210,14 @@
                     <td>あなた</td>
                     <td id="playerOldR"></td>
                     <td id="playerNewR"></td>
-                    <td id="playerDeltaR"></td>
+                    <td class="delta-rate-change" id="playerDeltaR"></td>
                     <td id="playerExpected"></td>
                 </tr>
                 <tr>
                     <td>対戦相手</td>
                     <td id="cpuOldR"></td>
                     <td id="cpuNewR"></td>
-                    <td id="cpuDeltaR"></td>
+                    <td class="delta-rate-change" id="cpuDeltaR"></td>
                     <td id="cpuExpected"></td>
                 </tr>
             </tbody>
@@ -191,17 +242,24 @@
         // --- ゲームステート ---
         let playerRating = INITIAL_RATING;
         let cpuRating = INITIAL_RATING;
-        let opponentXId = ''; // 相手のX IDを保持する変数
-        let selectedSongs = [];
+        let opponentXId = '';
+        const PLAYER_ID = "@TaikoLover_Rater"; // 便宜上のプレイヤーID
 
         // --- ユーティリティ関数 ---
 
-        // 画面表示を切り替える
+        // 画面表示を切り替える (アニメーション付き)
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(el => {
-                el.style.display = 'none';
+                el.classList.remove('visible');
+                el.style.display = 'none'; 
             });
-            document.getElementById(screenId).style.display = 'flex';
+            const targetScreen = document.getElementById(screenId);
+            targetScreen.style.display = 'flex'; // 表示を有効化
+            
+            // 短いディレイをかけてアニメーションを開始
+            setTimeout(() => {
+                targetScreen.classList.add('visible'); 
+            }, 10); 
         }
 
         // 簡易的なランダムID生成関数
@@ -248,14 +306,11 @@
             opponentXId = generateRandomXId(isCPU);
             const opponentType = isCPU ? 'CPU (テスト用)' : '匿名ユーザー';
 
-            // 画面に情報を表示
+            // 自分と相手の情報を表示
+            document.getElementById('myInfoDisplay').innerHTML = 
+                `ID: **${PLAYER_ID}**<br>R: ${Math.round(playerRating)}`;
             document.getElementById('opponentInfo').innerHTML = 
-                `対戦相手: **${opponentType}**<br>
-                X ID: <span style="color: #1DA1F2;">${opponentXId}</span> (R: ${Math.round(cpuRating)})`;
-            
-            // 申告画面用の情報も更新
-            document.getElementById('matchInfoForSubmission').textContent = 
-                `対戦相手のID: ${opponentXId}`;
+                `ID: **${opponentXId}**<br>R: ${Math.round(cpuRating)}`;
 
             selectedSongs = selectRandomSongs(3);
             
@@ -273,13 +328,29 @@
 
         // 結果申告画面へ遷移
         function goToResultSubmission() {
+            const submissionList = document.getElementById('submissionSongs');
+            submissionList.innerHTML = '';
+            
+            selectedSongs.forEach(song => {
+                const li = document.createElement('li');
+                li.textContent = song;
+                submissionList.appendChild(li);
+            });
             showScreen('resultSubmissionScreen');
         }
 
-        // 結果申告とレーティング計算
+        // 結果申告とレーティング計算 (確認ダイアログを追加)
         function submitResult(playerResultScore) {
-            // playerResultScore: 1 (Win), 0 (Loss), 0.5 (Draw)
-            
+            let resultAction = "";
+            if (playerResultScore === 1) resultAction = "勝利";
+            else if (playerResultScore === 0) resultAction = "敗北";
+            else resultAction = "引き分け";
+
+            // 確認ダイアログ
+            if (!confirm(`対戦結果を「${resultAction}」で申告します。よろしいですか？\n(リザルト交換に基づき、間違いのないよう確認してください)`)) {
+                return; // キャンセルの場合、処理を中断
+            }
+
             let resultText = "";
             let resultClass = "";
 
@@ -300,11 +371,9 @@
         // レーティング計算と結果表示
         function calculateAndDisplayRating(pResult, rText, rClass) {
             
-            // 1. 予想勝率を計算
             const expectedPlayerScore = calculateExpectedScore(playerRating, cpuRating);
             const expectedCpuScore = calculateExpectedScore(cpuRating, playerRating); 
 
-            // 2. 新しいレーティングを計算
             const oldPlayerR = playerRating;
             const oldCpuR = cpuRating;
             
@@ -314,7 +383,6 @@
             const deltaPlayerR = Math.round(newPlayerR - oldPlayerR);
             const deltaCpuR = Math.round(newCpuR - oldCpuR);
             
-            // グローバル変数（あなたのレーティング）を更新
             playerRating = newPlayerR;
             cpuRating = newCpuR;
             
@@ -323,21 +391,36 @@
             resultHeading.textContent = rText;
             resultHeading.className = rClass;
 
+            // アニメーションのため、まず旧Rと予想値を表示
             document.getElementById('playerOldR').textContent = Math.round(oldPlayerR);
-            document.getElementById('playerNewR').textContent = Math.round(newPlayerR);
-            document.getElementById('playerDeltaR').textContent = `${deltaPlayerR > 0 ? '+' : ''}${deltaPlayerR}`;
-            document.getElementById('playerDeltaR').style.color = deltaPlayerR > 0 ? 'blue' : (deltaPlayerR < 0 ? 'red' : 'black');
+            document.getElementById('playerNewR').textContent = Math.round(oldPlayerR); // 初期は旧R
+            document.getElementById('playerDeltaR').textContent = `計算中...`; // 初期は計算中
             document.getElementById('playerExpected').textContent = `${(expectedPlayerScore * 100).toFixed(1)}%`;
-
+            document.getElementById('playerDeltaR').style.color = 'black'; // リセット
 
             document.getElementById('cpuOldR').textContent = Math.round(oldCpuR);
-            document.getElementById('cpuNewR').textContent = Math.round(newCpuR);
-            document.getElementById('cpuDeltaR').textContent = `${deltaCpuR > 0 ? '+' : ''}${deltaCpuR}`;
-            document.getElementById('cpuDeltaR').style.color = deltaCpuR > 0 ? 'blue' : (deltaCpuR < 0 ? 'red' : 'black');
+            document.getElementById('cpuNewR').textContent = Math.round(oldCpuR); // 初期は旧R
+            document.getElementById('cpuDeltaR').textContent = `計算中...`; // 初期は計算中
             document.getElementById('cpuExpected').textContent = `${(expectedCpuScore * 100).toFixed(1)}%`;
-
+            document.getElementById('cpuDeltaR').style.color = 'black'; // リセット
 
             showScreen('resultScreen');
+
+            // --- レート変動アニメーション ---
+            setTimeout(() => {
+                document.getElementById('playerNewR').textContent = Math.round(newPlayerR);
+                document.getElementById('playerDeltaR').textContent = `${deltaPlayerR > 0 ? '+' : ''}${deltaPlayerR}`;
+                document.getElementById('playerDeltaR').style.color = deltaPlayerR > 0 ? 'blue' : (deltaPlayerR < 0 ? 'red' : 'black');
+                
+                document.getElementById('cpuNewR').textContent = Math.round(newCpuR);
+                document.getElementById('cpuDeltaR').textContent = `${deltaCpuR > 0 ? '+' : ''}${deltaCpuR}`;
+                document.getElementById('cpuDeltaR').style.color = deltaCpuR > 0 ? 'blue' : (deltaCpuR < 0 ? 'red' : 'black');
+
+                // 変動を視覚的に強調
+                document.getElementById('playerDeltaR').style.fontSize = '1.3em';
+                document.getElementById('cpuDeltaR').style.fontSize = '1.3em';
+            }, 1000); // 1秒後にレート変動をアニメーション表示
+
         }
 
         // 初期表示
