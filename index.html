@@ -4,164 +4,258 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🥁 太鼓の達人 レーティングマッチ 🏆</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- CSS スタイル --- */
+        :root {
+            --primary-color: #ff3333; /* お祭りレッド */
+            --primary-dark: #cc0000;
+            --accent-color: #ffcc00;   /* ゴールド */
+            --bg-gradient: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #4a4a4a;
+            --shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f0f0;
-            color: #333;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
             text-align: center;
             padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* 背景に和風なパターンを薄く入れる（CSSのみで表現） */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(#fff 15%, transparent 16%), radial-gradient(#fff 15%, transparent 16%);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            opacity: 0.1;
+            z-index: -1;
+            animation: bgScroll 20s linear infinite;
+        }
+
+        @keyframes bgScroll {
+            from { background-position: 0 0, 10px 10px; }
+            to { background-position: 100px 100px, 110px 110px; }
         }
 
         .screen {
-            background: #fff;
+            background: var(--card-bg);
             padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 0 auto;
-            min-height: 400px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 550px;
             display: none;
             flex-direction: column;
             justify-content: center;
+            border: 4px solid #fff;
             
-            /* --- アニメーション用設定 --- */
+            /* アニメーション用 */
             opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弾むような動き */
         }
 
-        /* アニメーション表示状態 */
         .screen.visible {
             opacity: 1;
-            transform: translateY(0);
+            transform: scale(1) translateY(0);
         }
 
-        h1 { color: #e44d26; } 
-        h2 { color: #333; }
+        h1 {
+            color: var(--primary-color);
+            text-shadow: 2px 2px 0px #ffeebb;
+            font-weight: 800;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        h2 {
+            border-bottom: 3px dashed var(--primary-color);
+            display: inline-block;
+            padding-bottom: 5px;
+            margin-bottom: 25px;
+            color: #333;
+        }
         
+        /* レーティング表示（メイン） */
         .rating-display {
-            font-size: 1.5em;
-            font-weight: bold;
+            font-size: 2em;
+            font-weight: 800;
             color: #007bff;
-            margin-bottom: 20px;
+            margin: 20px 0;
+            background: #eef;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* 結果表示の色 */
-        .win-text { color: #007bff; }
-        .lose-text { color: #dc3545; }
-        .draw-text { color: #ffc107; }
-
+        /* 立体的なアーケード風ボタン */
         button {
-            background-color: #e44d26;
+            background-color: var(--primary-color);
             color: white;
             border: none;
+            border-bottom: 6px solid var(--primary-dark); /* 立体感 */
             padding: 15px 30px;
             margin: 10px;
-            border-radius: 8px;
+            border-radius: 15px;
             cursor: pointer;
             font-size: 1.1em;
-            transition: background-color 0.3s;
-        }
-        
-        #btnFraudDemo {
-            background-color: #f89406; /* 警告色 */
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 1.0em;
+            font-weight: bold;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            transition: all 0.1s;
+            position: relative;
+            top: 0;
         }
 
         button:hover {
-            background-color: #d43b1a;
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            border-bottom-width: 2px;
+            transform: translateY(4px); /* 押し込みアニメーション */
         }
         
-        /* 申告ボタンの特殊なスタイル */
+        /* 勝敗ボタン */
         .result-button {
-            padding: 20px 40px;
-            font-size: 1.5em;
+            padding: 20px 30px;
+            font-size: 1.3em;
+            width: 100%;
+            margin: 8px 0;
         }
-        #btnWin { background-color: #28a745; }
-        #btnLoss { background-color: #dc3545; }
-        #btnDraw { background-color: #ffc107; color: #333; }
+        #btnWin { background-color: #28a745; border-bottom-color: #1e7e34; }
+        #btnLoss { background-color: #dc3545; border-bottom-color: #bd2130; }
+        #btnDraw { background-color: #ffc107; color: #444; border-bottom-color: #d39e00; }
 
+        /* 曲リスト */
         .music-list {
             list-style: none;
             padding: 0;
-            font-size: 1.1em;
             margin: 20px 0;
             text-align: left;
-            width: 80%;
-            margin: 20px auto;
         }
 
         .music-list li {
-            background: #eee;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        
-        .rating-table {
-            width: 90%;
-            margin: 20px auto;
-            border-collapse: collapse;
-        }
-        
-        .rating-table th, .rating-table td {
-            border: 1px solid #ddd;
+            background: #fff;
+            border: 2px solid #eee;
+            margin: 8px 0;
             padding: 12px;
-            text-align: center;
-            font-size: 1.1em;
+            border-radius: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .music-list li::before {
+            content: "♪";
+            color: var(--primary-color);
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .music-list li:hover {
+            transform: scale(1.02);
+            border-color: var(--accent-color);
+        }
+
+        /* テーブル装飾 */
+        .rating-table, .player-detail-table {
+            width: 100%;
+            margin: 20px auto;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #ddd;
+        }
+        
+        .rating-table th, .rating-table td, 
+        .player-detail-table th, .player-detail-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
         }
         
         .rating-table th {
-            background-color: #e44d26;
+            background-color: var(--primary-color);
             color: white;
         }
         
-        /* プレイヤー詳細テーブル */
-        .player-detail-table {
-            width: 90%;
-            margin: 15px auto;
-            border-collapse: collapse;
-            font-size: 1.2em;
-        }
-        .player-detail-table th, .player-detail-table td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px dashed #ccc;
-        }
         .player-detail-table th {
-            width: 30%;
-            color: #e44d26;
+            background: #f8f9fa;
+            color: var(--primary-color);
+            width: 35%;
         }
-        
+
+        /* 結果発表のアニメーション文字 */
+        .result-heading-huge {
+            font-size: 3em;
+            font-weight: 900;
+            margin: 10px 0;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .win-text { color: #28a745; text-shadow: 0 0 10px #7aff96; }
+        .lose-text { color: #dc3545; }
+        .draw-text { color: #ffc107; text-shadow: 2px 2px 0px #444; }
+
         /* レート変動アニメーション用 */
         .delta-rate-change {
-            font-weight: bold;
-            transition: all 0.5s ease;
+            font-weight: 800;
             display: inline-block;
+        }
+
+        /* 待機中のパルスアニメーション */
+        .pulse-text {
+            animation: pulse 1.5s infinite;
+            color: #1DA1F2;
+            font-weight: bold;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.6; }
         }
     </style>
 </head>
 <body>
 
     <div id="titleScreen" class="screen">
-        <h1>🥁 太鼓の達人 レーティングマッチ 🏆</h1>
+        <h1>🥁 太鼓の達人<br>レーティングマッチ 🏆</h1>
         <div class="rating-display">
-            あなたの現在のレーティング: <span id="playerRatingDisplay">1500</span>
+            RATING: <span id="playerRatingDisplay">1500</span>
         </div>
-        <p>対戦相手とのリザルト交換に基づき、勝敗を申告してください。</p>
+        <p>実力が近い相手とマッチングし、<br>リザルト交換でレートを競おう！</p>
         
-        <button onclick="startMatch(false)">マッチングに参加 (通常申告)</button>
-        <button onclick="startMatch(true)">CPUとマッチング (テスト用)</button>
-        
-        <button id="btnFraudDemo" onclick="startFraudDemo()">🚨 不正検知デモ (両者勝ち画面を見る)</button>
+        <div style="margin-top: 20px;">
+            <button onclick="startMatch('online')">⚔️ マッチング開始 (対人)</button>
+            <button onclick="startMatch('cpu')" style="background-color:#6c757d; border-bottom-color:#545b62;">🤖 CPUと練習 (テスト)</button>
+        </div>
     </div>
 
     <div id="matchResultScreen" class="screen">
-        <h2>🎉 マッチング成立！</h2>
+        <h2 style="color: #28a745;">🎉 マッチング成立！</h2>
         
         <table class="player-detail-table">
             <tr>
@@ -174,73 +268,81 @@
             </tr>
         </table>
 
-        <h3>今日の課題曲 (3曲)</h3>
+        <h3>📂 今日の課題曲 (3曲)</h3>
         <ul id="selectedSongs" class="music-list">
             </ul>
-        <button onclick="goToResultSubmission()">リザルト交換・結果申告へ</button>
+        <button onclick="goToResultSubmission()">リザルト交換・結果申告へ ➡</button>
     </div>
 
     <div id="resultSubmissionScreen" class="screen">
-        <h2>🗳️ 試合結果の申告 🗳️</h2>
-        <p>対戦相手とX (DM) でリザルト画像を交換し、**3曲合計の良の数**で勝敗を確定した後、結果を選択してください。</p>
+        <h2>🗳️ 勝敗の申告</h2>
+        <p>リザルト画像を交換し、<br><strong>3曲合計の良の数</strong>で勝敗を決めてください。</p>
         
-        <p id="opponentDisplayInSubmission" style="font-size: 1.3em; font-weight: bold; color: #1DA1F2; margin: 15px 0;">
-            </p>
+        <div style="background:#f0f8ff; padding:10px; border-radius:10px; margin: 15px 0;">
+            <span style="font-size:0.9em; color:#666;">対戦相手</span><br>
+            <span id="opponentDisplayInSubmission" style="font-size: 1.4em; font-weight: 800; color: #1DA1F2;"></span>
+        </div>
         
-        <h3 style="color: #007bff; margin-top: 25px;">確認: 今回の課題曲</h3>
-        <ul id="submissionSongs" class="music-list">
+        <h3 style="margin-top: 20px; font-size:1.1em;">今回の課題曲</h3>
+        <ul id="submissionSongs" class="music-list" style="font-size: 0.9em;">
              </ul>
 
-        <div style="margin-top: 30px;">
-            <button id="btnWin" class="result-button" onclick="submitResult(1)">勝利 (Win)</button>
-            <button id="btnLoss" class="result-button" onclick="submitResult(0)">敗北 (Lose)</button>
-            <button id="btnDraw" class="result-button" onclick="submitResult(0.5)">引き分け (Draw)</button>
+        <div style="margin-top: 20px;">
+            <p style="font-weight:bold; margin-bottom:10px;">あなたの結果は？</p>
+            <div style="display:flex; gap:10px;">
+                <button id="btnWin" class="result-button" onclick="submitResult(1)">🏆 勝利 (Win)</button>
+                <button id="btnLoss" class="result-button" onclick="submitResult(0)">💀 敗北 (Lose)</button>
+            </div>
+            <button id="btnDraw" class="result-button" style="margin-top:0;" onclick="submitResult(0.5)">🤝 引き分け (Draw)</button>
         </div>
     </div>
     
     <div id="waitingScreen" class="screen" style="text-align: center;">
-        <h2>⏳ 対戦相手の申告を待っています...</h2>
-        <p style="font-size: 1.2em;">対戦相手（<span id="waitingOpponentId" style="color: #1DA1F2;"></span>）が結果を申告するまでお待ちください。</p>
+        <h2>⏳ 相手の申告待ち...</h2>
+        <div style="margin: 40px 0;">
+            <p class="pulse-text" style="font-size: 3em;">🥁</p>
+            <p style="font-size: 1.2em;">相手（<span id="waitingRivalName" style="color: #1DA1F2; font-weight:bold;"></span>）が<br>結果を入力しています。</p>
+        </div>
         
         <div style="margin-top: 30px;">
-            <p>申告が完了すると、自動的に勝敗結果画面に遷移します。</p>
-            <button onclick="resetGame()">タイトルに戻る (強制中断)</button>
+            <button onclick="resetGame()" style="background:#999; border-bottom-color:#777; font-size:0.9em;">タイトルに戻る (強制中断)</button>
         </div>
     </div>
 
     <div id="resultScreen" class="screen">
-        <h2 id="resultHeading"></h2>
-        <p>対戦結果が申告されました。レーティングが変動します。</p>
+        <div id="resultHeading" class="result-heading-huge"></div>
+        <p>レーティング計算完了！</p>
         
         <table class="rating-table">
             <thead>
                 <tr>
-                    <th>プレイヤー</th>
-                    <th>旧R</th>
-                    <th>新R</th>
-                    <th>増減</th>
-                    <th>予想勝率</th>
+                    <th>PLAYER</th>
+                    <th>旧レート</th>
+                    <th>推移</th>
+                    <th>新レート</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>あなた</td>
+                    <td style="font-weight:bold;">あなた</td>
                     <td id="playerOldR"></td>
-                    <td id="playerNewR"></td>
-                    <td class="delta-rate-change" id="playerDeltaR"></td>
-                    <td id="playerExpected"></td>
+                    <td>➡</td>
+                    <td style="font-size:1.4em; font-weight:800;" id="playerNewR"></td>
                 </tr>
                 <tr>
-                    <td>対戦相手</td>
+                    <td>RIVAL</td>
                     <td id="cpuOldR"></td>
+                    <td>➡</td>
                     <td id="cpuNewR"></td>
-                    <td class="delta-rate-change" id="cpuDeltaR"></td>
-                    <td id="cpuExpected"></td>
                 </tr>
             </tbody>
         </table>
+        
+        <div style="margin: 20px 0; font-size: 2em; font-weight: 800;">
+            <span id="diffDisplay"></span>
+        </div>
 
-        <button onclick="resetGame()">タイトルに戻る</button>
+        <button onclick="resetGame()">🏠 タイトルに戻る</button>
     </div>
 
 
@@ -255,62 +357,67 @@
         ];
         const K_FACTOR = 32;
         const INITIAL_RATING = 1500;
-        const SIMULATION_DELAY_MS = 5000; // CPUの申告遅延時間 (5秒)
+        const SIMULATION_DELAY_MS = 4000; 
 
         // --- ゲームステート ---
         let playerRating = INITIAL_RATING;
         let cpuRating = INITIAL_RATING;
         let opponentXId = '';
-        const PLAYER_ID = "@TaikoLover_Rater"; 
+        const PLAYER_ID = "@Taitasuuuu11"; 
         let playerReportedResult = null;
         let opponentReportedResult = null;
-        let isFraudDemoMode = false; // 不正検知デモモードフラグ
 
-        // --- ユーティリティ関数 ---
-
-        // 画面表示を切り替える (アニメーション付き)
+        // --- 画面遷移アニメーション ---
         function showScreen(screenId) {
+            // 現在の表示を消す
             document.querySelectorAll('.screen').forEach(el => {
                 el.classList.remove('visible');
-                el.style.display = 'none'; 
+                setTimeout(() => {
+                    if(!el.classList.contains('visible')) el.style.display = 'none';
+                }, 400); // フェードアウト待ち
             });
-            const targetScreen = document.getElementById(screenId);
-            targetScreen.style.display = 'flex';
-            
+
+            // 少し待ってから次を表示（遷移を滑らかに）
             setTimeout(() => {
+                const targetScreen = document.getElementById(screenId);
+                targetScreen.style.display = 'flex';
+                // リフローを強制してアニメーション発火
+                void targetScreen.offsetWidth;
                 targetScreen.classList.add('visible'); 
-            }, 10); 
+            }, 200);
         }
 
-        // 簡易的なランダムID生成関数
+        // ランダムID生成
         function generateRandomXId(isCPU) {
             if (isCPU) {
-                const cpuNames = ["TaikoRival", "R_Mash", "Donbot", "KatsuKing"];
+                const cpuNames = ["DON-Chan", "KATSU-Kun", "TaikoMaster", "DrumKing"];
                 const suffix = Math.floor(Math.random() * 900) + 100;
                 return `@${cpuNames[Math.floor(Math.random() * cpuNames.length)]}_${suffix}`;
             }
-            return "@AnonPlayer_" + Math.random().toString(36).substring(2, 8);
+            return "@Rival_" + Math.random().toString(36).substring(2, 6).toUpperCase();
         }
 
-        // タイトル画面の表示とレーティングの更新
         function resetGame() {
-            // ステートをリセット
             playerReportedResult = null;
             opponentReportedResult = null;
-            isFraudDemoMode = false; // デモモードを解除
-
             document.getElementById('playerRatingDisplay').textContent = Math.round(playerRating);
-            showScreen('titleScreen');
+            
+            // 初回ロード時は即時表示、それ以外はアニメーション
+            const title = document.getElementById('titleScreen');
+            if(title.style.display === '') {
+                 title.style.display = 'flex';
+                 setTimeout(() => title.classList.add('visible'), 10);
+            } else {
+                showScreen('titleScreen');
+            }
         }
 
-        // 3曲をランダムに選曲する
         function selectRandomSongs(count) {
             const shuffled = [...SONG_POOL].sort(() => 0.5 - Math.random());
             return shuffled.slice(0, count);
         }
 
-        // --- Eloレーティング計算ロジック ---
-        
+        // --- Elo計算 ---
         function calculateExpectedScore(Ra, Rb) {
             return 1.0 / (1.0 + Math.pow(10, (Rb - Ra) / 400));
         }
@@ -319,233 +426,162 @@
             return R + K * (S - E);
         }
 
-        // --- ゲームフロー関数 ---
-
-        // マッチング開始処理 (通常/テスト用)
-        function startMatch(isCpuMatch) {
-            isFraudDemoMode = false; // デモモードを確実に解除
-            cpuRating = INITIAL_RATING + Math.floor(Math.random() * 200) - 100; 
-            
-            opponentXId = generateRandomXId(isCpuMatch);
+        // --- ゲームフロー ---
+        function startMatch(mode) {
+            cpuRating = INITIAL_RATING + Math.floor(Math.random() * 300) - 150; 
+            const isCPU = (mode === 'cpu');
+            opponentXId = generateRandomXId(isCPU);
 
             document.getElementById('myInfoDisplay').innerHTML = 
-                `ID: **${PLAYER_ID}**<br>R: ${Math.round(playerRating)}`;
+                `<span style="color:#007bff; font-weight:bold;">${PLAYER_ID}</span><br>Rating: ${Math.round(playerRating)}`;
             document.getElementById('opponentInfo').innerHTML = 
-                `ID: **${opponentXId}**<br>R: ${Math.round(cpuRating)}`;
+                `<span style="color:#e44d26; font-weight:bold;">${opponentXId}</span><br>Rating: ${Math.round(cpuRating)}`;
 
             selectedSongs = selectRandomSongs(3);
-            
             const songListElement = document.getElementById('selectedSongs');
             songListElement.innerHTML = '';
-            
-            selectedSongs.forEach(song => {
+            selectedSongs.forEach((song, index) => {
                 const li = document.createElement('li');
-                li.textContent = song;
+                li.innerHTML = `<span style="color:#999; margin-right:5px;">#${index+1}</span> ${song}`;
+                li.style.animation = `fadeIn 0.5s ease forwards ${index * 0.1}s`;
+                li.style.opacity = '0'; // 初期状態
                 songListElement.appendChild(li);
             });
+            
+            // CSSアニメーション定義の追加（JS内で定義して注入）
+            const styleSheet = document.createElement("style");
+            styleSheet.innerText = "@keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }";
+            document.head.appendChild(styleSheet);
 
             showScreen('matchResultScreen');
         }
-        
-        // 不正検知デモ開始処理 (新規追加)
-        function startFraudDemo() {
-            isFraudDemoMode = true; // デモモードを有効化
-            cpuRating = INITIAL_RATING + Math.floor(Math.random() * 200) - 100; 
-            opponentXId = "@FraudDemo_CPU"; // デモ用の固定ID
 
-            document.getElementById('myInfoDisplay').innerHTML = 
-                `ID: **${PLAYER_ID}**<br>R: ${Math.round(playerRating)}`;
-            document.getElementById('opponentInfo').innerHTML = 
-                `ID: **${opponentXId}**<br>R: ${Math.round(cpuRating)}`;
-
-            selectedSongs = selectRandomSongs(3);
-            
-            const songListElement = document.getElementById('selectedSongs');
-            songListElement.innerHTML = '';
-            
-            selectedSongs.forEach(song => {
-                const li = document.createElement('li');
-                li.textContent = song;
-                songListElement.appendChild(li);
-            });
-
-            // 申告画面へ直行することをユーザーに伝える
-            alert("🚨 不正検知デモモードを開始します。\n\n次の画面で『勝利 (Win)』を選び、システムが両者勝ちを検知する様子を確認してください。");
-            
-            showScreen('matchResultScreen');
-        }
-
-
-        // 結果申告画面へ遷移
         function goToResultSubmission() {
             const submissionList = document.getElementById('submissionSongs');
             submissionList.innerHTML = '';
-            
-            selectedSongs.forEach(song => {
+            selectedSongs.forEach((song, index) => {
                 const li = document.createElement('li');
                 li.textContent = song;
                 submissionList.appendChild(li);
             });
-            
-            // 相手のIDを表示
-            document.getElementById('opponentDisplayInSubmission').textContent = 
-                `対戦相手: ${opponentXId}`;
-            
+            document.getElementById('opponentDisplayInSubmission').textContent = opponentXId;
             showScreen('resultSubmissionScreen');
         }
 
-        /**
-         * プレイヤーが結果を申告する際の処理
-         * @param {number} pResult プレイヤーの申告結果 (1:勝, 0:負, 0.5:分)
-         */
         function submitResult(pResult) {
-            let resultAction = "";
-            if (pResult === 1) resultAction = "勝利";
-            else if (pResult === 0) resultAction = "敗北";
-            else resultAction = "引き分け";
+            let resultAction = pResult === 1 ? "勝利" : (pResult === 0 ? "敗北" : "引き分け");
+            if (!confirm(`対戦結果「${resultAction}」で確定しますか？`)) return;
 
-            // 確認ダイアログ
-            if (!confirm(`対戦結果を「${resultAction}」で申告します。よろしいですか？\n(対戦相手ID: ${opponentXId})`)) {
-                return;
-            }
-
-            // プレイヤーの申告を記録
             playerReportedResult = pResult;
-
-            // 相手待ち画面へ遷移
-            document.getElementById('waitingOpponentId').textContent = opponentXId;
+            document.getElementById('waitingRivalName').textContent = opponentXId;
             showScreen('waitingScreen');
-
-            // CPUの申告シミュレーションを開始
             simulateCpuSubmission(pResult);
         }
         
-        /**
-         * CPUが結果を申告するシミュレーション (デモモード分岐あり)
-         * @param {number} playerResult プレイヤーの申告結果 (1, 0, 0.5)
-         */
         function simulateCpuSubmission(playerResult) {
+            // 遅延演出
             setTimeout(() => {
                 let cpuResult;
-
-                if (isFraudDemoMode && playerResult === 1) {
-                    // 🚨 不正検知デモモード: プレイヤーが勝ちを選んだら、CPUも勝ちを選ぶ (両者勝ち)
-                    cpuResult = 1; 
-                    alert("🚨 デモ通知: プレイヤーが「勝利」を申告したため、CPUも意図的に「勝利」を申告します。");
-                } else if (playerResult === 1) {
-                    // 通常モード: プレイヤー勝利 -> CPU敗北
-                    cpuResult = 0; 
-                } else if (playerResult === 0) {
-                    // 通常モード: プレイヤー敗北 -> CPU勝利
-                    cpuResult = 1;
-                } else {
-                    // 通常モード: プレイヤー引き分け -> CPU引き分け
-                    cpuResult = 0.5;
-                }
+                if (playerResult === 1) cpuResult = 0;
+                else if (playerResult === 0) cpuResult = 1;
+                else cpuResult = 0.5;
                 
                 opponentReportedResult = cpuResult;
-
-                // 両者の結果を照合し、勝敗判定へ進む
                 checkResultsAndCalculate();
-
             }, SIMULATION_DELAY_MS);
         }
 
-        /**
-         * 両者の申告結果を照合し、レーティング計算を行う
-         */
         function checkResultsAndCalculate() {
             if (playerReportedResult === null || opponentReportedResult === null) {
-                alert("エラー: 両者の申告が揃っていません。");
-                resetGame();
-                return;
+                resetGame(); return;
             }
 
-            // --- 申告内容の照合チェック ---
             const resultSum = playerReportedResult + opponentReportedResult;
-
             if (resultSum !== 1.0) {
-                 // 両者勝ち (2.0) や 両者負け (0.0) など、矛盾が生じた場合
-                 alert(`🚨 【不正申告検知】システムが申告内容の矛盾を検知しました (合計: ${resultSum.toFixed(1)})。\n\nこの対戦結果は無効化され、レーティングは変動しません。\n管理者の調査対象となります。\n\nテストのためタイトルに戻ります。`);
+                 alert("エラー：申告内容に矛盾があります。");
                  resetGame();
                  return;
             }
             
-            // 正常な申告であれば、プレイヤーの申告値が最終結果となる
             let finalPlayerResult = playerReportedResult; 
-            let resultText = "";
-            let resultClass = "";
+            let resultText = "", resultClass = "";
 
             if (finalPlayerResult === 1) {
-                resultText = "🏆 勝利！ 🏆";
+                resultText = "YOU WIN!!";
                 resultClass = "win-text";
             } else if (finalPlayerResult === 0) {
-                resultText = "敗北...";
+                resultText = "LOSE...";
                 resultClass = "lose-text";
             } else {
-                resultText = "引き分け！";
+                resultText = "DRAW";
                 resultClass = "draw-text";
             }
 
             calculateAndDisplayRating(finalPlayerResult, resultText, resultClass);
         }
         
-        // レーティング計算と結果表示
+        // --- 数字のカウントアップ演出 ---
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
         function calculateAndDisplayRating(pResult, rText, rClass) {
-            
             const expectedPlayerScore = calculateExpectedScore(playerRating, cpuRating);
             const expectedCpuScore = calculateExpectedScore(cpuRating, playerRating); 
-
             const oldPlayerR = playerRating;
             const oldCpuR = cpuRating;
-            
             const newPlayerR = updateRating(oldPlayerR, expectedPlayerScore, pResult, K_FACTOR);
             const newCpuR = updateRating(oldCpuR, expectedCpuScore, 1 - pResult, K_FACTOR);
-            
             const deltaPlayerR = Math.round(newPlayerR - oldPlayerR);
-            const deltaCpuR = Math.round(newCpuR - oldCpuR);
             
             playerRating = newPlayerR;
             cpuRating = newCpuR;
             
-            // 3. 結果画面に表示
             const resultHeading = document.getElementById('resultHeading');
             resultHeading.textContent = rText;
-            resultHeading.className = rClass;
+            resultHeading.className = "result-heading-huge " + rClass;
 
-            // アニメーションのための初期値設定
             document.getElementById('playerOldR').textContent = Math.round(oldPlayerR);
-            document.getElementById('playerNewR').textContent = Math.round(oldPlayerR);
-            document.getElementById('playerDeltaR').textContent = `計算中...`;
-            document.getElementById('playerExpected').textContent = `${(expectedPlayerScore * 100).toFixed(1)}%`;
-            document.getElementById('playerDeltaR').style.color = 'black';
-
             document.getElementById('cpuOldR').textContent = Math.round(oldCpuR);
-            document.getElementById('cpuNewR').textContent = Math.round(oldCpuR);
-            document.getElementById('cpuDeltaR').textContent = `計算中...`;
-            document.getElementById('cpuExpected').textContent = `${(expectedCpuScore * 100).toFixed(1)}%`;
-            document.getElementById('cpuDeltaR').style.color = 'black';
+            
+            // 差分の表示色
+            const diffEl = document.getElementById('diffDisplay');
+            if(deltaPlayerR > 0) {
+                diffEl.textContent = `+${deltaPlayerR}`;
+                diffEl.style.color = 'blue';
+            } else if (deltaPlayerR < 0) {
+                diffEl.textContent = `${deltaPlayerR}`;
+                diffEl.style.color = 'red';
+            } else {
+                diffEl.textContent = `±0`;
+                diffEl.style.color = '#777';
+            }
 
             showScreen('resultScreen');
 
-            // --- レート変動アニメーション ---
+            // 画面遷移後に数字をカウントアップさせる
             setTimeout(() => {
-                document.getElementById('playerNewR').textContent = Math.round(newPlayerR);
-                document.getElementById('playerDeltaR').textContent = `${deltaPlayerR > 0 ? '+' : ''}${deltaPlayerR}`;
-                document.getElementById('playerDeltaR').style.color = deltaPlayerR > 0 ? 'blue' : (deltaPlayerR < 0 ? 'red' : 'black');
-                
-                document.getElementById('cpuNewR').textContent = Math.round(newCpuR);
-                document.getElementById('cpuDeltaR').textContent = `${deltaCpuR > 0 ? '+' : ''}${deltaCpuR}`;
-                document.getElementById('cpuDeltaR').style.color = deltaCpuR > 0 ? 'blue' : (deltaCpuR < 0 ? 'red' : 'black');
-
-                document.getElementById('playerDeltaR').style.fontSize = '1.3em';
-                document.getElementById('cpuDeltaR').style.fontSize = '1.3em';
-            }, 1000); 
-
+                animateValue("playerNewR", Math.round(oldPlayerR), Math.round(newPlayerR), 1500);
+                animateValue("cpuNewR", Math.round(oldCpuR), Math.round(newCpuR), 1500);
+            }, 500);
         }
 
-        // 初期表示
-        resetGame();
+        // 初期化
+        document.addEventListener("DOMContentLoaded", () => {
+             // 最初の画面を表示
+             document.getElementById('titleScreen').style.display = 'flex';
+             setTimeout(()=>document.getElementById('titleScreen').classList.add('visible'), 100);
+        });
 
     </script>
 </body>
