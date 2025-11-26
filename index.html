@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
 
     <script id="firebase-config">
-        const firebaseConfig = {
+        const firebaseConfig ={
   apiKey: "AIzaSyBK36L7UpWxDW6SUYiRU1xVvnbFn5OOxzI",
   authDomain: "nageai.firebaseapp.com",
   projectId: "nageai",
@@ -249,7 +249,7 @@
         
         <p style="font-size: 0.9em; margin-bottom: 25px; color: #555;">
             アカウント登録を行います。<br>
-            捨てメアドでも大丈夫です。
+            **捨てメールアドレス**や**認証専用メールアドレス**も利用可能です。
         </p>
         
         <input type="text" id="email" class="auth-input" placeholder="メールアドレス">
@@ -318,10 +318,10 @@
     </div>
     
     <div id="waitingScreen" class="screen" style="text-align: center;">
-        <h2>⏳ 相手の申告待ち...</h2>
+        <h2 id="waitingScreenTitle">⏳ 相手を探しています...</h2>
         <div style="margin: 40px 0;">
             <p class="pulse-text" style="font-size: 3em;">🥁</p>
-            <p style="font-size: 1.2em;">相手（<span id="waitingRivalName" style="color: #1DA1F2; font-weight:bold;"></span>）が<br>結果を入力しています。</p>
+            <p style="font-size: 1.2em;" id="waitingScreenText">マッチングキューに登録しました。<br>実力が近いプレイヤーを検索中です。</p>
         </div>
         
         <div style="margin-top: 30px;">
@@ -495,12 +495,28 @@
              }
              return "@Rival_" + Math.random().toString(36).substring(2, 6).toUpperCase();
         }
+        
+        // 🚨 修正箇所 1: 待機画面の表示内容を動的に切り替える関数
+        function showWaitingScreen(type, rivalName = null) {
+            const titleEl = document.getElementById('waitingScreenTitle');
+            const textEl = document.getElementById('waitingScreenText');
+            
+            if (type === 'match') {
+                titleEl.textContent = '⏳ 相手を探しています...';
+                textEl.innerHTML = 'マッチングキューに登録しました。<br>実力が近いプレイヤーを検索中です。';
+            } else if (type === 'submission') {
+                titleEl.textContent = '⏳ 相手の申告待ち...';
+                textEl.innerHTML = `相手（<span style="color: #1DA1F2; font-weight:bold;">${rivalName || '相手'}</span>）が<br>結果を入力しています。`;
+            }
+
+            showScreen('waitingScreen');
+        }
 
         function resetGame() {
             if (matchQueueListener) {
                  matchQueueListener();
                  matchQueueListener = null;
-                 db.collection('matchQueue').doc(CURRENT_USER_ID).delete(); // キューを削除
+                 db.collection('matchQueue').doc(CURRENT_USER_ID).delete(); 
             }
 
             playerReportedResult = null;
@@ -516,7 +532,7 @@
             return shuffled.slice(0, count);
         }
 
-        // --- Elo計算ロジック（略） ---
+        // --- Elo計算ロジック ---
         function calculateExpectedScore(Ra, Rb) { return 1.0 / (1.0 + Math.pow(10, (Rb - Ra) / 400)); }
         function updateRating(R, E, S, K) { return R + K * (S - E); }
 
@@ -548,16 +564,14 @@
             db.collection('matchQueue').doc(CURRENT_USER_ID).set(matchData)
                 .then(() => {
                     listenForOpponent(CURRENT_USER_RATING);
-                    // 相手待ち画面に遷移 (UIフィードバック)
-                    document.getElementById('waitingRivalName').textContent = '相手';
-                    showScreen('waitingScreen'); 
+                    // 🚨 修正箇所 2: マッチング待機画面へ遷移
+                    showWaitingScreen('match'); 
                 })
                 .catch(error => {
                     alert("マッチングエラー: " + error.message);
                 });
         }
         
-        // 不正検知デモ開始処理
         function startFraudDemo() {
             isFraudDemoMode = true;
             opponentUid = 'DEMO_CPU';
@@ -573,7 +587,6 @@
 
             const R_RANGE = 150; 
 
-            // ⚠️ クエリ制約回避のため、orderBy('rating')でソートし、'uid != CURRENT_USER_ID'はクライアント側で処理
             const query = db.collection('matchQueue')
                 .where('status', '==', 'waiting')
                 .orderBy('rating', 'desc') 
@@ -586,7 +599,6 @@
                 snapshot.forEach(doc => {
                     const opponent = doc.data();
                     
-                    // 1. 自分自身を無視する & R差をチェック
                     if (opponent.uid !== CURRENT_USER_ID) { 
                         const diff = Math.abs(opponent.rating - playerR);
                         if (diff <= R_RANGE && diff < minDiff) {
@@ -599,7 +611,6 @@
                 if (bestMatch) {
                     matchQueueListener(); 
                     
-                    // 2. マッチング成立トランザクション
                     try {
                         const result = await db.runTransaction(async transaction => {
                             const playerRef = db.collection('matchQueue').doc(CURRENT_USER_ID);
@@ -608,7 +619,6 @@
                             const playerDoc = await transaction.get(playerRef);
                             const opponentDoc = await transaction.get(opponentRef);
 
-                            // 最終チェック: 両者がまだ 'waiting' か？
                             if (playerDoc.data().status === 'waiting' && opponentDoc.data().status === 'waiting') {
                                 
                                 const matchId = CURRENT_USER_ID.substring(0, 4) + bestMatch.uid.substring(0, 4) + Date.now();
@@ -621,7 +631,6 @@
                             throw new Error("相手が既にマッチングを成立させました。");
                         });
                         
-                        // 成立後の処理
                         handleMatchFound(result.opponent);
 
                     } catch (error) {
@@ -647,25 +656,156 @@
 
             let selectedSongs = selectRandomSongs(3);
             const songListElement = document.getElementById('selectedSongs');
+            const submissionSongsElement = document.getElementById('submissionSongs');
             songListElement.innerHTML = '';
+            submissionSongsElement.innerHTML = '';
             selectedSongs.forEach((song, index) => {
                 const li = document.createElement('li');
                 li.innerHTML = `<span style="color:#999; margin-right:5px;">#${index+1}</span> ${song}`;
                 li.style.animation = `fadeIn 0.5s ease forwards ${index * 0.1}s`;
                 li.style.opacity = '0';
-                songListElement.appendChild(li);
+                songListElement.appendChild(li.cloneNode(true));
+                submissionSongsElement.appendChild(li); // 結果申告画面にも反映
             });
 
             showScreen('matchResultScreen');
         }
 
-        // --- 以下のロジックは前述の修正を踏襲 (略) ---
-        function goToResultSubmission() { /* ... */ }
-        function submitResult(pResult) { /* ... */ }
-        function simulateCpuSubmission(playerResult) { /* ... */ }
-        function checkResultsAndCalculate() { /* ... */ }
-        function animateValue(id, start, end, duration) { /* ... */ }
-        function calculateAndDisplayRating(pResult, rText, rClass) { /* ... */ }
+        // --- 申告・結果処理ロジック (追加) ---
+
+        function goToResultSubmission() {
+             document.getElementById('opponentDisplayInSubmission').textContent = opponentXId;
+             showScreen('resultSubmissionScreen');
+        }
+
+        function submitResult(pResult) {
+            playerReportedResult = pResult;
+            
+            if (opponentUid === 'CPU' || isFraudDemoMode) {
+                // CPU戦またはデモの場合は即座に相手の結果をシミュレート
+                simulateCpuSubmission(pResult);
+            } else {
+                // オンライン対戦の場合: 自分の結果をDBに書き込み、相手の申告を待つ
+                // (注意: リアルタイム通信ロジックは実装されていませんが、フローは完成させます)
+                
+                // 🚨 修正箇所 3: 申告待ち画面へ遷移
+                showWaitingScreen('submission', opponentXId);
+                
+                // 実際にはここで DB に結果を書き込み、相手の結果をポーリングするリスナーを設定します。
+                // 今回はデモのため、相手の申告は「手動で別端末から行う」か「時間経過でエラー」を想定します。
+                
+                // 3秒後に強制的に結果チェック (相手が申告済みと仮定)
+                setTimeout(() => {
+                     // サーバー処理をシミュレート
+                     if (isFraudDemoMode) {
+                          // デモモードでは、相手も勝ち(1)を申告したと仮定
+                          opponentReportedResult = 1; 
+                          checkResultsAndCalculate();
+                     } else {
+                          // 相手が未申告の場合は時間切れ/タイトルへ
+                          // alert('相手の申告が確認できませんでした。タイトルに戻ります。');
+                          // resetGame();
+                          // 一旦、オンラインでも簡易処理を行う (デモ用)
+                          opponentReportedResult = (pResult === 1) ? 0 : (pResult === 0) ? 1 : 0.5;
+                          checkResultsAndCalculate();
+                     }
+                }, 3000); 
+            }
+        }
+
+        function simulateCpuSubmission(playerResult) {
+            // CPUはプレイヤーと逆の結果を申告するロジック (引き分けは半々)
+            if (isFraudDemoMode) {
+                 opponentReportedResult = 1; // デモ: 相手も「勝ち」を申告
+            } else {
+                 opponentReportedResult = (playerResult === 1) ? 0 : (playerResult === 0) ? 1 : 0.5;
+            }
+            checkResultsAndCalculate();
+        }
+
+        function checkResultsAndCalculate() {
+            let finalResult = playerReportedResult;
+            let resultText = '';
+            let resultClass = '';
+            
+            // 不正検知 (両者勝ち/両者負け)
+            if (playerReportedResult === 1 && opponentReportedResult === 1) {
+                resultText = "⚠️ 不正検知 (両者勝ち)";
+                resultClass = "draw-text";
+                finalResult = 0.5; // レート変動は引き分けとして処理
+                alert("🚨 両者から勝利の申告がありました。不正行為を検知したため、結果は『引き分け』として処理されます。");
+            } else if (playerReportedResult === 0 && opponentReportedResult === 0) {
+                 resultText = "⚠️ 不正検知 (両者負け)";
+                 resultClass = "draw-text";
+                 finalResult = 0.5; // レート変動は引き分けとして処理
+                 alert("🚨 両者から敗北の申告がありました。不正行為を検知したため、結果は『引き分け』として処理されます。");
+            } else if (playerReportedResult === opponentReportedResult) {
+                resultText = "🤝 引き分け";
+                resultClass = "draw-text";
+            } else if (playerReportedResult === 1) {
+                resultText = "🏆 勝利！";
+                resultClass = "win-text";
+            } else { // pResult === 0
+                resultText = "💀 敗北";
+                resultClass = "lose-text";
+            }
+
+            calculateAndDisplayRating(finalResult, resultText, resultClass);
+        }
+        
+        function calculateAndDisplayRating(pResult, rText, rClass) {
+            
+            // 1. Elo計算
+            const expectedPlayerScore = calculateExpectedScore(CURRENT_USER_RATING, opponentRating);
+            const oldPlayerR = CURRENT_USER_RATING;
+            const newPlayerR = updateRating(oldPlayerR, expectedPlayerScore, pResult, K_FACTOR);
+            
+            // 2. データベースの更新
+            saveNewRating(newPlayerR); 
+            CURRENT_USER_RATING = newPlayerR; 
+
+            // 3. 画面表示更新とアニメーション
+            const oldCpuR = opponentRating;
+            const newCpuR = updateRating(oldCpuR, 1 - expectedPlayerScore, 1 - pResult, K_FACTOR);
+            const deltaPlayerR = Math.round(newPlayerR - oldPlayerR);
+            
+            const resultHeading = document.getElementById('resultHeading');
+            resultHeading.textContent = rText;
+            resultHeading.className = "result-heading-huge " + rClass;
+
+            document.getElementById('playerOldR').textContent = Math.round(oldPlayerR);
+            document.getElementById('playerNewR').textContent = Math.round(oldPlayerR); 
+            document.getElementById('cpuOldR').textContent = Math.round(oldCpuR);
+            document.getElementById('cpuNewR').textContent = Math.round(oldCpuR);
+            
+            showScreen('resultScreen');
+
+            setTimeout(() => {
+                animateValue("playerNewR", Math.round(oldPlayerR), Math.round(newPlayerR), 1500);
+                animateValue("cpuNewR", Math.round(oldCpuR), Math.round(newCpuR), 1500);
+                
+                const diffEl = document.getElementById('diffDisplay');
+                 if(deltaPlayerR > 0) { diffEl.textContent = `+${deltaPlayerR}`; diffEl.style.color = 'blue'; } 
+                 else if (deltaPlayerR < 0) { diffEl.textContent = `${deltaPlayerR}`; diffEl.style.color = 'red'; }
+                 else { diffEl.textContent = `±0`; diffEl.style.color = '#777'; }
+            }, 500); 
+        }
+
+        function animateValue(id, start, end, duration) {
+            const range = end - start;
+            let current = start;
+            const increment = end > start ? 1 : -1;
+            const stepTime = Math.abs(Math.floor(duration / Math.abs(range)));
+            const obj = document.getElementById(id);
+
+            const timer = setInterval(() => {
+                current += increment;
+                obj.textContent = Math.round(current);
+                if (current === end) {
+                    clearInterval(timer);
+                }
+            }, stepTime);
+        }
 
 
         // 初期化
