@@ -236,8 +236,14 @@
 </head>
 <body>
 
-    <div id="authScreen" class="screen">
+   <div id="authScreen" class="screen">
         <h2>👤 レーティングマッチへようこそ</h2>
+        
+        <p style="font-size: 0.9em; margin-bottom: 25px; color: #555;">
+            アカウント登録を行います。<br>
+            **捨てメアドでも大丈夫です。
+        </p>
+        
         <input type="text" id="email" class="auth-input" placeholder="メールアドレス">
         <input type="password" id="password" class="auth-input" placeholder="パスワード (6文字以上)">
         <button id="btnRegister" onclick="handleAuth(true)">新規登録</button>
@@ -675,4 +681,5 @@
     </script>
 </body>
 </html>
+
 
