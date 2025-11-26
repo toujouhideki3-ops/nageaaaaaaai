@@ -64,6 +64,13 @@
             font-size: 1.1em;
             transition: background-color 0.3s;
         }
+        
+        #btnFraudDemo {
+            background-color: #f89406; /* 警告色 */
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.0em;
+        }
 
         button:hover {
             background-color: #d43b1a;
@@ -147,8 +154,10 @@
         </div>
         <p>対戦相手とのリザルト交換に基づき、勝敗を申告してください。</p>
         
-        <button onclick="startMatch('online')">マッチングに参加 (対人シミュ)</button>
-        <button onclick="startMatch('cpu')">CPUとマッチング (テスト用)</button>
+        <button onclick="startMatch(false)">マッチングに参加 (通常申告)</button>
+        <button onclick="startMatch(true)">CPUとマッチング (テスト用)</button>
+        
+        <button id="btnFraudDemo" onclick="startFraudDemo()">🚨 不正検知デモ (両者勝ち画面を見る)</button>
     </div>
 
     <div id="matchResultScreen" class="screen">
@@ -191,7 +200,7 @@
     
     <div id="waitingScreen" class="screen" style="text-align: center;">
         <h2>⏳ 対戦相手の申告を待っています...</h2>
-        <p style="font-size: 1.2em;">対戦相手（<span style="color: #1DA1F2;"></span>）が結果を申告するまでお待ちください。</p>
+        <p style="font-size: 1.2em;">対戦相手（<span id="waitingOpponentId" style="color: #1DA1F2;"></span>）が結果を申告するまでお待ちください。</p>
         
         <div style="margin-top: 30px;">
             <p>申告が完了すると、自動的に勝敗結果画面に遷移します。</p>
@@ -252,9 +261,10 @@
         let playerRating = INITIAL_RATING;
         let cpuRating = INITIAL_RATING;
         let opponentXId = '';
-        const PLAYER_ID = "@Taiko_test"; 
+        const PLAYER_ID = "@TaikoLover_Rater"; 
         let playerReportedResult = null;
         let opponentReportedResult = null;
+        let isFraudDemoMode = false; // 不正検知デモモードフラグ
 
         // --- ユーティリティ関数 ---
 
@@ -287,6 +297,7 @@
             // ステートをリセット
             playerReportedResult = null;
             opponentReportedResult = null;
+            isFraudDemoMode = false; // デモモードを解除
 
             document.getElementById('playerRatingDisplay').textContent = Math.round(playerRating);
             showScreen('titleScreen');
@@ -310,15 +321,13 @@
 
         // --- ゲームフロー関数 ---
 
-        // マッチング開始処理
-        function startMatch(mode) {
+        // マッチング開始処理 (通常/テスト用)
+        function startMatch(isCpuMatch) {
+            isFraudDemoMode = false; // デモモードを確実に解除
             cpuRating = INITIAL_RATING + Math.floor(Math.random() * 200) - 100; 
             
-            const isCPU = (mode === 'cpu');
-            opponentXId = generateRandomXId(isCPU);
-            const opponentType = isCPU ? 'CPU (テスト用)' : '匿名ユーザー';
+            opponentXId = generateRandomXId(isCpuMatch);
 
-            // 自分と相手の情報を表示 (Match Result Screen)
             document.getElementById('myInfoDisplay').innerHTML = 
                 `ID: **${PLAYER_ID}**<br>R: ${Math.round(playerRating)}`;
             document.getElementById('opponentInfo').innerHTML = 
@@ -337,6 +346,35 @@
 
             showScreen('matchResultScreen');
         }
+        
+        // 不正検知デモ開始処理 (新規追加)
+        function startFraudDemo() {
+            isFraudDemoMode = true; // デモモードを有効化
+            cpuRating = INITIAL_RATING + Math.floor(Math.random() * 200) - 100; 
+            opponentXId = "@FraudDemo_CPU"; // デモ用の固定ID
+
+            document.getElementById('myInfoDisplay').innerHTML = 
+                `ID: **${PLAYER_ID}**<br>R: ${Math.round(playerRating)}`;
+            document.getElementById('opponentInfo').innerHTML = 
+                `ID: **${opponentXId}**<br>R: ${Math.round(cpuRating)}`;
+
+            selectedSongs = selectRandomSongs(3);
+            
+            const songListElement = document.getElementById('selectedSongs');
+            songListElement.innerHTML = '';
+            
+            selectedSongs.forEach(song => {
+                const li = document.createElement('li');
+                li.textContent = song;
+                songListElement.appendChild(li);
+            });
+
+            // 申告画面へ直行することをユーザーに伝える
+            alert("🚨 不正検知デモモードを開始します。\n\n次の画面で『勝利 (Win)』を選び、システムが両者勝ちを検知する様子を確認してください。");
+            
+            showScreen('matchResultScreen');
+        }
+
 
         // 結果申告画面へ遷移
         function goToResultSubmission() {
@@ -375,7 +413,7 @@
             playerReportedResult = pResult;
 
             // 相手待ち画面へ遷移
-            document.querySelector('#waitingScreen p span').textContent = opponentXId;
+            document.getElementById('waitingOpponentId').textContent = opponentXId;
             showScreen('waitingScreen');
 
             // CPUの申告シミュレーションを開始
@@ -383,20 +421,26 @@
         }
         
         /**
-         * CPUが結果を申告するシミュレーション
+         * CPUが結果を申告するシミュレーション (デモモード分岐あり)
          * @param {number} playerResult プレイヤーの申告結果 (1, 0, 0.5)
          */
         function simulateCpuSubmission(playerResult) {
             setTimeout(() => {
                 let cpuResult;
 
-                // プレイヤー申告に対する「正常な」CPU側の申告
-                if (playerResult === 1) {
-                    cpuResult = 0; // プレイヤー勝利 -> CPU敗北
+                if (isFraudDemoMode && playerResult === 1) {
+                    // 🚨 不正検知デモモード: プレイヤーが勝ちを選んだら、CPUも勝ちを選ぶ (両者勝ち)
+                    cpuResult = 1; 
+                    alert("🚨 デモ通知: プレイヤーが「勝利」を申告したため、CPUも意図的に「勝利」を申告します。");
+                } else if (playerResult === 1) {
+                    // 通常モード: プレイヤー勝利 -> CPU敗北
+                    cpuResult = 0; 
                 } else if (playerResult === 0) {
-                    cpuResult = 1; // プレイヤー敗北 -> CPU勝利
+                    // 通常モード: プレイヤー敗北 -> CPU勝利
+                    cpuResult = 1;
                 } else {
-                    cpuResult = 0.5; // プレイヤー引き分け -> CPU引き分け
+                    // 通常モード: プレイヤー引き分け -> CPU引き分け
+                    cpuResult = 0.5;
                 }
                 
                 opponentReportedResult = cpuResult;
@@ -411,7 +455,6 @@
          * 両者の申告結果を照合し、レーティング計算を行う
          */
         function checkResultsAndCalculate() {
-            // 両者の申告が揃っているか確認
             if (playerReportedResult === null || opponentReportedResult === null) {
                 alert("エラー: 両者の申告が揃っていません。");
                 resetGame();
@@ -419,12 +462,11 @@
             }
 
             // --- 申告内容の照合チェック ---
-            // 正常な申告であれば、合計は 1.0 になる (1+0, 0.5+0.5, 0+1)
             const resultSum = playerReportedResult + opponentReportedResult;
 
             if (resultSum !== 1.0) {
                  // 両者勝ち (2.0) や 両者負け (0.0) など、矛盾が生じた場合
-                 alert(`⚠️ 【システムエラー】申告内容が矛盾しています (合計: ${resultSum.toFixed(1)})。\n\n本来、この申告内容は記録され、管理者の調査待ちとなります。\n今回はテストのためタイトルに戻ります。`);
+                 alert(`🚨 【不正申告検知】システムが申告内容の矛盾を検知しました (合計: ${resultSum.toFixed(1)})。\n\nこの対戦結果は無効化され、レーティングは変動しません。\n管理者の調査対象となります。\n\nテストのためタイトルに戻ります。`);
                  resetGame();
                  return;
             }
@@ -508,4 +550,3 @@
     </script>
 </body>
 </html>
-
