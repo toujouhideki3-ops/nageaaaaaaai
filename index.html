@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥁 太鼓の達人 レーティングマッチ (結果申告) 🏆</title>
+    <style>
+        /* --- CSS スタイル --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .screen {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        h1 { color: #e44d26; } /* 太鼓の赤 */
+        h2 { color: #333; }
+        
+        .rating-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff; /* 青 */
+            margin-bottom: 20px;
+        }
+
+        /* 結果表示の色 */
+        .win-text { color: #007bff; }
+        .lose-text { color: #dc3545; }
+        .draw-text { color: #ffc107; }
+
+        button {
+            background-color: #e44d26;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #d43b1a;
+        }
+        
+        /* 申告ボタンの特殊なスタイル */
+        .result-button {
+            padding: 20px 40px;
+            font-size: 1.5em;
+        }
+        #btnWin { background-color: #28a745; } /* 緑 */
+        #btnLoss { background-color: #dc3545; } /* 赤 */
+        #btnDraw { background-color: #ffc107; color: #333; } /* 黄 */
+
+        .music-list {
+            list-style: none;
+            padding: 0;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+
+        .music-list li {
+            background: #eee;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .rating-table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        
+        .rating-table th, .rating-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .rating-table th {
+            background-color: #e44d26;
+            color: white;
+        }
+        
+        .opponent-info {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="titleScreen" class="screen">
+        <h1>🥁 太鼓の達人 レーティングマッチ 🏆</h1>
+        <div class="rating-display">
+            あなたの現在のレーティング: <span id="playerRatingDisplay">1500</span>
+        </div>
+        <p>対戦相手とのリザルト交換に基づき、勝敗を申告してください。</p>
+        
+        <button onclick="startMatch('online')">マッチングに参加 (対人シミュ)</button>
+        <button onclick="startMatch('cpu')">CPUとマッチング (テスト用)</button>
+    </div>
+
+    <div id="matchResultScreen" class="screen" style="display: none;">
+        <h2>🎉 マッチング成立！今日の対戦曲 🎉</h2>
+        <div id="opponentInfo" class="opponent-info"></div>
+        <ul id="selectedSongs" class="music-list">
+            </ul>
+        <button onclick="goToResultSubmission()">リザルト交換・結果申告へ</button>
+    </div>
+
+    <div id="resultSubmissionScreen" class="screen" style="display: none;">
+        <h2>🗳️ 試合結果の申告 🗳️</h2>
+        <p>対戦相手とX (DM) でリザルト画像を交換し、**3曲合計の良の数**で勝敗を確定した後、結果を選択してください。</p>
+        <p id="matchInfoForSubmission" style="font-weight: bold; color: #007bff; margin: 15px 0;"></p>
+
+        <div style="margin-top: 30px;">
+            <button id="btnWin" class="result-button" onclick="submitResult(1)">勝利 (Win)</button>
+            <button id="btnLoss" class="result-button" onclick="submitResult(0)">敗北 (Loss)</button>
+            <button id="btnDraw" class="result-button" onclick="submitResult(0.5)">引き分け (Draw)</button>
+        </div>
+    </div>
+    
+    <div id="resultScreen" class="screen" style="display: none;">
+        <h2 id="resultHeading"></h2>
+        <p>対戦結果が申告されました。レーティングが変動します。</p>
+        
+        <table class="rating-table">
+            <thead>
+                <tr>
+                    <th>プレイヤー</th>
+                    <th>旧R</th>
+                    <th>新R</th>
+                    <th>増減</th>
+                    <th>予想勝率</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>あなた</td>
+                    <td id="playerOldR"></td>
+                    <td id="playerNewR"></td>
+                    <td id="playerDeltaR"></td>
+                    <td id="playerExpected"></td>
+                </tr>
+                <tr>
+                    <td>対戦相手</td>
+                    <td id="cpuOldR"></td>
+                    <td id="cpuNewR"></td>
+                    <td id="cpuDeltaR"></td>
+                    <td id="cpuExpected"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button onclick="resetGame()">タイトルに戻る</button>
+    </div>
+
+
+    <script>
+        // --- 設定値と初期データ ---
+        const SONG_POOL = [
+            "Infinite Rebellion", "彁（裏）", "CRUXNAUT", "The Future of the 太鼓ドラム（裏）", 
+            "神竜 ～Shinryu～（裏）", "憎悪と醜悪の花束（裏）", "ダーク・エクス・マキナ♡", 
+            "第六天魔王（表）", "第六天魔王（裏）", "ダンガンノーツ（裏）", "Destination 2F29", 
+            "ドンカマ2000", "23時54分、陽の旅路へのプレリュード（裏）", "Vixtory（裏）", 
+            "vs.VIGVANGS（裏）", "poxei♦DOON", "幽玄ノ乱"
+        ];
+        const K_FACTOR = 32;
+        const INITIAL_RATING = 1500;
+
+        // --- ゲームステート ---
+        let playerRating = INITIAL_RATING;
+        let cpuRating = INITIAL_RATING;
+        let opponentXId = ''; // 相手のX IDを保持する変数
+        let selectedSongs = [];
+
+        // --- ユーティリティ関数 ---
+
+        // 画面表示を切り替える
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(el => {
+                el.style.display = 'none';
+            });
+            document.getElementById(screenId).style.display = 'flex';
+        }
+
+        // 簡易的なランダムID生成関数
+        function generateRandomXId(isCPU) {
+            if (isCPU) {
+                const cpuNames = ["TaikoRival", "R_Mash", "Donbot", "KatsuKing"];
+                const suffix = Math.floor(Math.random() * 900) + 100;
+                return `@${cpuNames[Math.floor(Math.random() * cpuNames.length)]}_${suffix}`;
+            }
+            return "@AnonPlayer_" + Math.random().toString(36).substring(2, 8);
+        }
+
+        // タイトル画面の表示とレーティングの更新
+        function resetGame() {
+            document.getElementById('playerRatingDisplay').textContent = Math.round(playerRating);
+            showScreen('titleScreen');
+        }
+
+        // 3曲をランダムに選曲する
+        function selectRandomSongs(count) {
+            const shuffled = [...SONG_POOL].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // --- Eloレーティング計算ロジック ---
+        
+        function calculateExpectedScore(Ra, Rb) {
+            return 1.0 / (1.0 + Math.pow(10, (Rb - Ra) / 400));
+        }
+
+        function updateRating(R, E, S, K) {
+            return R + K * (S - E);
+        }
+
+        // --- ゲームフロー関数 ---
+
+        // マッチング開始処理
+        function startMatch(mode) {
+            // 対戦相手のRを±100の範囲でランダムに決定
+            cpuRating = INITIAL_RATING + Math.floor(Math.random() * 200) - 100; 
+            
+            // X IDを設定
+            const isCPU = (mode === 'cpu');
+            opponentXId = generateRandomXId(isCPU);
+            const opponentType = isCPU ? 'CPU (テスト用)' : '匿名ユーザー';
+
+            // 画面に情報を表示
+            document.getElementById('opponentInfo').innerHTML = 
+                `対戦相手: **${opponentType}**<br>
+                X ID: <span style="color: #1DA1F2;">${opponentXId}</span> (R: ${Math.round(cpuRating)})`;
+            
+            // 申告画面用の情報も更新
+            document.getElementById('matchInfoForSubmission').textContent = 
+                `対戦相手のID: ${opponentXId}`;
+
+            selectedSongs = selectRandomSongs(3);
+            
+            const songListElement = document.getElementById('selectedSongs');
+            songListElement.innerHTML = '';
+            
+            selectedSongs.forEach(song => {
+                const li = document.createElement('li');
+                li.textContent = song;
+                songListElement.appendChild(li);
+            });
+
+            showScreen('matchResultScreen');
+        }
+
+        // 結果申告画面へ遷移
+        function goToResultSubmission() {
+            showScreen('resultSubmissionScreen');
+        }
+
+        // 結果申告とレーティング計算
+        function submitResult(playerResultScore) {
+            // playerResultScore: 1 (Win), 0 (Loss), 0.5 (Draw)
+            
+            let resultText = "";
+            let resultClass = "";
+
+            if (playerResultScore === 1) {
+                resultText = "🏆 勝利！ 🏆";
+                resultClass = "win-text";
+            } else if (playerResultScore === 0) {
+                resultText = "敗北...";
+                resultClass = "lose-text";
+            } else {
+                resultText = "引き分け！";
+                resultClass = "draw-text";
+            }
+            
+            calculateAndDisplayRating(playerResultScore, resultText, resultClass);
+        }
+        
+        // レーティング計算と結果表示
+        function calculateAndDisplayRating(pResult, rText, rClass) {
+            
+            // 1. 予想勝率を計算
+            const expectedPlayerScore = calculateExpectedScore(playerRating, cpuRating);
+            const expectedCpuScore = calculateExpectedScore(cpuRating, playerRating); 
+
+            // 2. 新しいレーティングを計算
+            const oldPlayerR = playerRating;
+            const oldCpuR = cpuRating;
+            
+            const newPlayerR = updateRating(oldPlayerR, expectedPlayerScore, pResult, K_FACTOR);
+            const newCpuR = updateRating(oldCpuR, expectedCpuScore, 1 - pResult, K_FACTOR);
+            
+            const deltaPlayerR = Math.round(newPlayerR - oldPlayerR);
+            const deltaCpuR = Math.round(newCpuR - oldCpuR);
+            
+            // グローバル変数（あなたのレーティング）を更新
+            playerRating = newPlayerR;
+            cpuRating = newCpuR;
+            
+            // 3. 結果画面に表示
+            const resultHeading = document.getElementById('resultHeading');
+            resultHeading.textContent = rText;
+            resultHeading.className = rClass;
+
+            document.getElementById('playerOldR').textContent = Math.round(oldPlayerR);
+            document.getElementById('playerNewR').textContent = Math.round(newPlayerR);
+            document.getElementById('playerDeltaR').textContent = `${deltaPlayerR > 0 ? '+' : ''}${deltaPlayerR}`;
+            document.getElementById('playerDeltaR').style.color = deltaPlayerR > 0 ? 'blue' : (deltaPlayerR < 0 ? 'red' : 'black');
+            document.getElementById('playerExpected').textContent = `${(expectedPlayerScore * 100).toFixed(1)}%`;
+
+
+            document.getElementById('cpuOldR').textContent = Math.round(oldCpuR);
+            document.getElementById('cpuNewR').textContent = Math.round(newCpuR);
+            document.getElementById('cpuDeltaR').textContent = `${deltaCpuR > 0 ? '+' : ''}${deltaCpuR}`;
+            document.getElementById('cpuDeltaR').style.color = deltaCpuR > 0 ? 'blue' : (deltaCpuR < 0 ? 'red' : 'black');
+            document.getElementById('cpuExpected').textContent = `${(expectedCpuScore * 100).toFixed(1)}%`;
+
+
+            showScreen('resultScreen');
+        }
+
+        // 初期表示
+        resetGame();
+
+    </script>
+
+</body>
+</html>
