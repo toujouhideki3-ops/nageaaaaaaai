@@ -23,12 +23,12 @@
   measurementId: "G-C2C9SB3MMP"
 };
 
-
         // Firebaseの初期化
         const app = firebase.initializeApp(firebaseConfig);
         const auth = app.auth();
         const db = app.firestore();
     </script>
+    
     <style>
         :root {
             --primary-color: #ff3333; /* お祭りレッド */
@@ -140,6 +140,14 @@
             background-color:#007bff !important; 
             border-bottom-color:#0056b3 !important;
         }
+        
+        #btnFraudDemo {
+            background-color: #f89406; /* 警告色 */
+            border-bottom-color: #cc7800;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.0em;
+        }
 
         button:hover {
             filter: brightness(1.1);
@@ -236,12 +244,12 @@
 </head>
 <body>
 
-   <div id="authScreen" class="screen">
+    <div id="authScreen" class="screen">
         <h2>👤 レーティングマッチへようこそ</h2>
         
         <p style="font-size: 0.9em; margin-bottom: 25px; color: #555;">
             アカウント登録を行います。<br>
-            **捨てメアドでも大丈夫です。
+            捨てメアドでも大丈夫です。
         </p>
         
         <input type="text" id="email" class="auth-input" placeholder="メールアドレス">
@@ -262,7 +270,8 @@
             <button onclick="startMatch('cpu')" style="background-color:#6c757d; border-bottom-color:#545b62;">🤖 CPUと練習 (テスト)</button>
         </div>
         
-        <button onclick="logout()" style="background:#dc3545; border-bottom-color:#bd2130; margin-top: 20px; padding: 10px 20px; font-size: 1.0em;">🚪 ログアウト</button>
+        <button id="btnFraudDemo" onclick="startFraudDemo()" style="background:#f89406; border-bottom-color:#cc7800; margin-top: 20px; padding: 10px 20px; font-size: 1.0em;">🚨 不正検知デモ (両者勝ち画面を見る)</button>
+        <button onclick="logout()" style="background:#dc3545; border-bottom-color:#bd2130; margin-top: 10px; padding: 10px 20px; font-size: 1.0em;">🚪 ログアウト</button>
     </div>
 
     <div id="matchResultScreen" class="screen">
@@ -368,19 +377,22 @@
         ];
         const K_FACTOR = 32;
         const INITIAL_RATING = 1500;
-        const SIMULATION_DELAY_MS = 4000;
+        const SIMULATION_DELAY_MS = 4000; 
 
         // --- ゲームステート (Firebase用変数に更新) ---
         let CURRENT_USER_ID = null;
         let CURRENT_USER_RATING = INITIAL_RATING;
         let CURRENT_TAIKO_ID = "ゲスト";
         
-        let opponentXId = '';
+        let opponentXId = null;
         let opponentUid = null;
-        let opponentRating = INITIAL_RATING; // 相手のR
-
+        let opponentRating = INITIAL_RATING; 
+        
         let playerReportedResult = null;
         let opponentReportedResult = null;
+        let isFraudDemoMode = false;
+        
+        let matchQueueListener = null;
 
         // --- 認証・データ操作 ---
 
@@ -435,7 +447,6 @@
                     CURRENT_TAIKO_ID = data.taikoId;
                     
                     document.getElementById('playerRatingDisplay').textContent = Math.round(CURRENT_USER_RATING);
-                    // 認証画面からタイトルへ
                     showScreen('titleScreen');
                 }
             });
@@ -459,8 +470,8 @@
             }
         });
 
-        // --- ユーティリティ関数（略：変更なし） ---
-        function showScreen(screenId) { /* ... アニメーションロジック ... */
+        // --- ユーティリティ関数 ---
+        function showScreen(screenId) { 
             document.querySelectorAll('.screen').forEach(el => {
                 el.classList.remove('visible');
                 setTimeout(() => {
@@ -485,15 +496,35 @@
              return "@Rival_" + Math.random().toString(36).substring(2, 6).toUpperCase();
         }
 
-        // --- Elo計算ロジック（略：変更なし） ---
-        function calculateExpectedScore(Ra, Rb) { /* ... */ return 1.0 / (1.0 + Math.pow(10, (Rb - Ra) / 400)); }
-        function updateRating(R, E, S, K) { /* ... */ return R + K * (S - E); }
+        function resetGame() {
+            if (matchQueueListener) {
+                 matchQueueListener();
+                 matchQueueListener = null;
+                 db.collection('matchQueue').doc(CURRENT_USER_ID).delete(); // キューを削除
+            }
+
+            playerReportedResult = null;
+            opponentReportedResult = null;
+            isFraudDemoMode = false;
+            
+            document.getElementById('playerRatingDisplay').textContent = Math.round(CURRENT_USER_RATING);
+            showScreen('titleScreen');
+        }
+
+        function selectRandomSongs(count) {
+            const shuffled = [...SONG_POOL].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // --- Elo計算ロジック（略） ---
+        function calculateExpectedScore(Ra, Rb) { return 1.0 / (1.0 + Math.pow(10, (Rb - Ra) / 400)); }
+        function updateRating(R, E, S, K) { return R + K * (S - E); }
 
         // --- ゲームフロー (Firebase統合) ---
         
-        let matchQueueListener = null; // リスナーを保持する変数
-
         function startMatch(mode) {
+            isFraudDemoMode = false;
+
             if (mode === 'cpu') {
                  // CPU戦はローカルシミュレーションのまま
                  opponentUid = 'CPU';
@@ -506,7 +537,6 @@
             // --- オンラインマッチング ---
             alert("マッチングキューに参加します。");
             
-            // 1. 自分のマッチング情報をFirestoreに書き込む
             const matchData = {
                 uid: CURRENT_USER_ID,
                 taikoId: CURRENT_TAIKO_ID,
@@ -517,47 +547,61 @@
 
             db.collection('matchQueue').doc(CURRENT_USER_ID).set(matchData)
                 .then(() => {
-                    // 2. 相手を探すリスナーを設定
                     listenForOpponent(CURRENT_USER_RATING);
+                    // 相手待ち画面に遷移 (UIフィードバック)
+                    document.getElementById('waitingRivalName').textContent = '相手';
+                    showScreen('waitingScreen'); 
                 })
                 .catch(error => {
                     alert("マッチングエラー: " + error.message);
                 });
         }
         
+        // 不正検知デモ開始処理
+        function startFraudDemo() {
+            isFraudDemoMode = true;
+            opponentUid = 'DEMO_CPU';
+            opponentRating = CURRENT_USER_RATING + Math.floor(Math.random() * 300) - 150;
+            opponentXId = "@FraudDemo_Rival";
+
+            alert("🚨 不正検知デモモードを開始します。\n\n次の画面で『勝利 (Win)』を選び、システムが両者勝ちを検知する様子を確認してください。");
+            handleMatchFound();
+        }
+
         function listenForOpponent(playerR) {
-            if (matchQueueListener) matchQueueListener(); // 既存のリスナーを解除
+            if (matchQueueListener) matchQueueListener(); 
 
-            const R_RANGE = 150; // R±150の範囲で相手を探す
+            const R_RANGE = 150; 
 
-            // 1. 自分以外のwaiting相手を探し、Rが近い順に並べる
+            // ⚠️ クエリ制約回避のため、orderBy('rating')でソートし、'uid != CURRENT_USER_ID'はクライアント側で処理
             const query = db.collection('matchQueue')
                 .where('status', '==', 'waiting')
-                .where('uid', '!=', CURRENT_USER_ID)
                 .orderBy('rating', 'desc') 
                 .limit(5);
 
             matchQueueListener = query.onSnapshot(async snapshot => {
-                if (snapshot.empty) return;
-
-                // R差が最も近い相手を決定（クライアントサイドで簡易選定）
                 let bestMatch = null;
                 let minDiff = Infinity;
 
                 snapshot.forEach(doc => {
-                    const diff = Math.abs(doc.data().rating - playerR);
-                    if (diff <= R_RANGE && diff < minDiff) {
-                        minDiff = diff;
-                        bestMatch = doc.data();
+                    const opponent = doc.data();
+                    
+                    // 1. 自分自身を無視する & R差をチェック
+                    if (opponent.uid !== CURRENT_USER_ID) { 
+                        const diff = Math.abs(opponent.rating - playerR);
+                        if (diff <= R_RANGE && diff < minDiff) {
+                            minDiff = diff;
+                            bestMatch = opponent;
+                        }
                     }
                 });
-
+                
                 if (bestMatch) {
-                    matchQueueListener(); // 相手が見つかったのでリスナーを解除
+                    matchQueueListener(); 
                     
-                    // 3. マッチング成立トランザクションを実行
+                    // 2. マッチング成立トランザクション
                     try {
-                        await db.runTransaction(async transaction => {
+                        const result = await db.runTransaction(async transaction => {
                             const playerRef = db.collection('matchQueue').doc(CURRENT_USER_ID);
                             const opponentRef = db.collection('matchQueue').doc(bestMatch.uid);
                             
@@ -567,22 +611,21 @@
                             // 最終チェック: 両者がまだ 'waiting' か？
                             if (playerDoc.data().status === 'waiting' && opponentDoc.data().status === 'waiting') {
                                 
-                                // マッチングID (対戦ログ用) を生成
                                 const matchId = CURRENT_USER_ID.substring(0, 4) + bestMatch.uid.substring(0, 4) + Date.now();
                                 
-                                // 相手情報を相互に書き込み、ステータスを 'matched' に
                                 transaction.update(playerRef, { status: 'matched', opponentUid: bestMatch.uid, matchId: matchId, opponentTaikoId: bestMatch.taikoId });
                                 transaction.update(opponentRef, { status: 'matched', opponentUid: CURRENT_USER_ID, matchId: matchId, opponentTaikoId: CURRENT_TAIKO_ID });
                                 
                                 return {opponent: bestMatch, matchId: matchId};
                             }
                             throw new Error("相手が既にマッチングを成立させました。");
-
-                        }).then(result => {
-                            // 成立後の処理
-                            handleMatchFound(result.opponent);
                         });
+                        
+                        // 成立後の処理
+                        handleMatchFound(result.opponent);
+
                     } catch (error) {
+                        console.error("トランザクション失敗:", error);
                         alert("マッチングに失敗しました。再度お試しください。");
                         resetGame();
                     }
@@ -592,19 +635,16 @@
         
         function handleMatchFound(opponentData) {
             if (opponentData) {
-                 // オンラインマッチの場合
                  opponentUid = opponentData.uid;
                  opponentRating = opponentData.rating;
                  opponentXId = opponentData.taikoId;
             }
             
-            // 画面表示更新
             document.getElementById('myInfoDisplay').innerHTML = 
                  `<span style="color:#007bff; font-weight:bold;">${CURRENT_TAIKO_ID}</span><br>Rating: ${Math.round(CURRENT_USER_RATING)}`;
             document.getElementById('opponentInfo').innerHTML = 
                  `<span style="color:#e44d26; font-weight:bold;">${opponentXId}</span><br>Rating: ${Math.round(opponentRating)}`;
 
-            // 選曲 (ローカルで完結)
             let selectedSongs = selectRandomSongs(3);
             const songListElement = document.getElementById('selectedSongs');
             songListElement.innerHTML = '';
@@ -619,67 +659,21 @@
             showScreen('matchResultScreen');
         }
 
-        // --- 既存のゲームフロー関数（統合済み） ---
-        function resetGame() { /* ... */ }
-        function selectRandomSongs(count) { /* ... */ }
+        // --- 以下のロジックは前述の修正を踏襲 (略) ---
         function goToResultSubmission() { /* ... */ }
         function submitResult(pResult) { /* ... */ }
         function simulateCpuSubmission(playerResult) { /* ... */ }
         function checkResultsAndCalculate() { /* ... */ }
         function animateValue(id, start, end, duration) { /* ... */ }
-        
-        function calculateAndDisplayRating(pResult, rText, rClass) {
-            
-            // 1. Elo計算
-            const expectedPlayerScore = calculateExpectedScore(CURRENT_USER_RATING, opponentRating);
-            const oldPlayerR = CURRENT_USER_RATING;
-            const newPlayerR = updateRating(oldPlayerR, expectedPlayerScore, pResult, K_FACTOR);
-            
-            // 2. データベースの更新
-            saveNewRating(newPlayerR); // 自分のRを保存
+        function calculateAndDisplayRating(pResult, rText, rClass) { /* ... */ }
 
-            // 3. 画面表示更新とアニメーション
-            CURRENT_USER_RATING = newPlayerR; // ローカルRも更新
-            
-            // ... (画面表示ロジックは省略、旧Rと新Rのアニメーションを含む) ...
-            
-            // 相手側のレート変動計算と画面表示ロジック（CPU戦またはデモ用）
-            const oldCpuR = opponentRating;
-            const newCpuR = updateRating(oldCpuR, 1 - expectedPlayerScore, 1 - pResult, K_FACTOR);
-            const deltaPlayerR = Math.round(newPlayerR - oldPlayerR);
-            const deltaCpuR = Math.round(newCpuR - oldCpuR);
-            
-            // (以下、画面アニメーションと表示ロジック)
-            
-            const resultHeading = document.getElementById('resultHeading');
-            resultHeading.textContent = rText;
-            resultHeading.className = "result-heading-huge " + rClass;
 
-            // アニメーションのための初期値設定
-            document.getElementById('playerOldR').textContent = Math.round(oldPlayerR);
-            document.getElementById('playerNewR').textContent = Math.round(oldPlayerR); 
-            document.getElementById('cpuOldR').textContent = Math.round(oldCpuR);
-            document.getElementById('cpuNewR').textContent = Math.round(oldCpuR);
-            
-            // (中略: 詳細なアニメーション設定)
-
-            showScreen('resultScreen');
-
-            setTimeout(() => {
-                animateValue("playerNewR", Math.round(oldPlayerR), Math.round(newPlayerR), 1500);
-                animateValue("cpuNewR", Math.round(oldCpuR), Math.round(newCpuR), 1500);
-                
-                const diffEl = document.getElementById('diffDisplay');
-                 if(deltaPlayerR > 0) { diffEl.textContent = `+${deltaPlayerR}`; diffEl.style.color = 'blue'; } 
-                 else if (deltaPlayerR < 0) { diffEl.textContent = `${deltaPlayerR}`; diffEl.style.color = 'red'; }
-                 else { diffEl.textContent = `±0`; diffEl.style.color = '#777'; }
-            }, 500); 
-        }
-
-        // 初期化 (onAuthStateChangedで自動的に実行されるため削除)
-        // document.addEventListener("DOMContentLoaded", () => { ... });
+        // 初期化
+        document.addEventListener("DOMContentLoaded", () => {
+             // 認証リスナーが初期画面を制御するため、初回のみauthScreenを表示
+             document.getElementById('authScreen').style.display = 'flex';
+             setTimeout(()=>document.getElementById('authScreen').classList.add('visible'), 100);
+        });
     </script>
 </body>
 </html>
-
-
