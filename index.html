@@ -113,20 +113,7 @@
             color: white;
         }
         
-        .opponent-info {
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #555;
-        }
-        
-        /* レート変動アニメーション用 */
-        .delta-rate-change {
-            font-weight: bold;
-            transition: all 0.5s ease;
-            display: inline-block;
-        }
-        
+        /* プレイヤー詳細テーブル */
         .player-detail-table {
             width: 90%;
             margin: 15px auto;
@@ -141,6 +128,13 @@
         .player-detail-table th {
             width: 30%;
             color: #e44d26;
+        }
+        
+        /* レート変動アニメーション用 */
+        .delta-rate-change {
+            font-weight: bold;
+            transition: all 0.5s ease;
+            display: inline-block;
         }
     </style>
 </head>
@@ -181,13 +175,17 @@
         <h2>🗳️ 試合結果の申告 🗳️</h2>
         <p>対戦相手とX (DM) でリザルト画像を交換し、**3曲合計の良の数**で勝敗を確定した後、結果を選択してください。</p>
         
+        <p id="opponentDisplayInSubmission" style="font-size: 1.3em; font-weight: bold; color: #1DA1F2; margin: 15px 0;">
+            </p>
+        
         <h3 style="color: #007bff; margin-top: 25px;">確認: 今回の課題曲</h3>
         <ul id="submissionSongs" class="music-list">
              </ul>
 
         <div style="margin-top: 30px;">
             <button id="btnWin" class="result-button" onclick="submitResult(1)">勝利 (Win)</button>
-            <button id="btnLoss" class="result-button" onclick="submitResult(0)">敗北 (Lose)</button> <button id="btnDraw" class="result-button" onclick="submitResult(0.5)">引き分け (Draw)</button>
+            <button id="btnLoss" class="result-button" onclick="submitResult(0)">敗北 (Lose)</button>
+            <button id="btnDraw" class="result-button" onclick="submitResult(0.5)">引き分け (Draw)</button>
         </div>
     </div>
     
@@ -326,7 +324,7 @@
             showScreen('matchResultScreen');
         }
 
-        // 結果申告画面へ遷移 (修正点: 相手ID表示を追加)
+        // 結果申告画面へ遷移
         function goToResultSubmission() {
             const submissionList = document.getElementById('submissionSongs');
             submissionList.innerHTML = '';
@@ -338,10 +336,8 @@
             });
             
             // 相手のIDを表示
-            const opponentDisplay = document.getElementById('opponentDisplayInSubmission');
-            if (opponentDisplay) {
-                 opponentDisplay.textContent = `対戦相手: ${opponentXId}`;
-            }
+            document.getElementById('opponentDisplayInSubmission').textContent = 
+                `対戦相手: ${opponentXId}`;
             
             showScreen('resultSubmissionScreen');
         }
@@ -353,7 +349,7 @@
             else if (playerResultScore === 0) resultAction = "敗北";
             else resultAction = "引き分け";
 
-            // 確認ダイアログ
+            // 確認ダイアログ (相手IDを含む)
             if (!confirm(`対戦結果を「${resultAction}」で申告します。よろしいですか？\n(対戦相手ID: ${opponentXId})`)) {
                 return; // キャンセルの場合、処理を中断
             }
@@ -434,7 +430,5 @@
         resetGame();
 
     </script>
-
 </body>
 </html>
-
