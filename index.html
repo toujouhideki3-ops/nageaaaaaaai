@@ -13,17 +13,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
 
     <script id="firebase-config">
-        const firebaseConfig ={
-  apiKey: "AIzaSyBK36L7UpWxDW6SUYiRU1xVvnbFn5OOxzI",
-  authDomain: "nageai.firebaseapp.com",
-  projectId: "nageai",
-  storageBucket: "nageai.firebasestorage.app",
-  messagingSenderId: "858906804092",
-  appId: "1:858906804092:web:202e2bff5e36f68f286ef9",
-  measurementId: "G-C2C9SB3MMP"
-};
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY", 
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
 
-        // Firebaseの初期化
         const app = firebase.initializeApp(firebaseConfig);
         const auth = app.auth();
         const db = app.firestore();
@@ -31,7 +29,7 @@
     
     <style>
         :root {
-            --primary-color: #ff3333; /* お祭りレッド */
+            --primary-color: #ff3333; 
             --primary-dark: #cc0000;
             --accent-color: #ffcc00;
             --bg-gradient: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
@@ -52,23 +50,6 @@
             align-items: center;
             justify-content: center;
             overflow-x: hidden;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(#fff 15%, transparent 16%), radial-gradient(#fff 15%, transparent 16%);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
-            opacity: 0.1;
-            z-index: -1;
-            animation: bgScroll 20s linear infinite;
-        }
-
-        @keyframes bgScroll {
-            from { background-position: 0 0, 10px 10px; }
-            to { background-position: 100px 100px, 110px 110px; }
         }
 
         .screen {
@@ -132,242 +113,143 @@
             font-weight: bold;
             font-family: 'M PLUS Rounded 1c', sans-serif;
             transition: all 0.1s;
-            position: relative;
-            top: 0;
-        }
-        
-        #btnAuth, #btnRegister {
-            background-color:#007bff !important; 
-            border-bottom-color:#0056b3 !important;
-        }
-        
-        #btnFraudDemo {
-            background-color: #f89406; /* 警告色 */
-            border-bottom-color: #cc7800;
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 1.0em;
-        }
-
-        button:hover {
-            filter: brightness(1.1);
-            transform: translateY(-2px);
-        }
-
-        button:active {
-            border-bottom-width: 2px;
-            transform: translateY(4px);
-        }
-        
-        .result-button {
-            padding: 20px 30px;
-            font-size: 1.3em;
             width: 100%;
-            margin: 8px 0;
+            max-width: 300px;
+            align-self: center;
         }
+        
+        button:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        button:active { border-bottom-width: 2px; transform: translateY(4px); }
+        
+        #btnAuth, #btnRegister { background-color:#007bff; border-bottom-color:#0056b3; }
+        .result-button { padding: 20px 30px; font-size: 1.3em; margin: 8px 0; width: 100%; }
         #btnWin { background-color: #28a745; border-bottom-color: #1e7e34; }
         #btnLoss { background-color: #dc3545; border-bottom-color: #bd2130; }
         #btnDraw { background-color: #ffc107; color: #444; border-bottom-color: #d39e00; }
 
-        .music-list {
-            list-style: none;
-            padding: 0;
-            margin: 20px 0;
-            text-align: left;
-        }
-
+        .auth-input { padding:12px; margin:10px 0; width:80%; border-radius:8px; border: 2px solid #ddd; font-size: 1.1em; text-align: center;}
+        
+        .music-list { list-style: none; padding: 0; margin: 20px 0; text-align: left; }
         .music-list li {
-            background: #fff;
-            border: 2px solid #eee;
-            margin: 8px 0;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            background: #fff; border: 2px solid #eee; margin: 8px 0; padding: 12px;
+            border-radius: 10px; font-weight: bold; display: flex; align-items: center;
         }
-        
-        .music-list li::before {
-            content: "♪";
-            color: var(--primary-color);
-            margin-right: 10px;
-            font-size: 1.2em;
-        }
-        
-        .player-detail-table {
-            width: 90%;
-            margin: 15px auto;
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 2px solid #ddd;
-        }
-        .player-detail-table th {
-            background: #f8f9fa;
-            color: var(--primary-color);
-            width: 35%;
-        }
-        
-        .result-heading-huge {
-            font-size: 3em;
-            font-weight: 900;
-            margin: 10px 0;
-            text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
-            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        @keyframes zoomIn {
-            from { transform: scale(0); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        
-        .win-text { color: #28a745; text-shadow: 0 0 10px #7aff96; }
-        .lose-text { color: #dc3545; }
-        .draw-text { color: #ffc107; text-shadow: 2px 2px 0px #444; }
+        .music-list li::before { content: "♪"; color: var(--primary-color); margin-right: 10px; }
 
-        .pulse-text {
-            animation: pulse 1.5s infinite;
-            color: #1DA1F2;
-            font-weight: bold;
+        .player-detail-table, .rating-table {
+            width: 100%; margin: 20px auto; border-collapse: separate; border-spacing: 0;
+            border-radius: 10px; overflow: hidden; border: 2px solid #ddd;
         }
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; transform: scale(1.05); }
-            100% { opacity: 0.6; }
-        }
+        .player-detail-table th, .rating-table th { background: var(--primary-color); color: white; padding: 12px; }
+        .player-detail-table td, .rating-table td { padding: 12px; border-bottom: 1px solid #eee; }
 
-        .auth-input { padding:10px; margin:10px 0; width:80%; border-radius:8px; border: 1px solid #ccc;}
+        .pulse-text { animation: pulse 1.5s infinite; color: #1DA1F2; font-weight: bold; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.6; } }
+        
+        .win-text { color: #28a745; } .lose-text { color: #dc3545; } .draw-text { color: #ffc107; text-shadow: 1px 1px 0 #444; }
+        .result-heading-huge { font-size: 3em; font-weight: 900; margin: 10px 0; animation: zoomIn 0.5s ease; }
+        @keyframes zoomIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div id="authScreen" class="screen">
-        <h2>👤 レーティングマッチへようこそ</h2>
-        
+        <h2>👤 ログイン / 登録</h2>
         <p style="font-size: 0.9em; margin-bottom: 25px; color: #555;">
-            アカウント登録を行います。<br>
-            **捨てメールアドレス**や**認証専用メールアドレス**も利用可能です。
+            捨てメールアドレス等でも登録可能です。<br>
+            登録直後のユーザー名は「ゲスト」になります。
         </p>
-        
         <input type="text" id="email" class="auth-input" placeholder="メールアドレス">
         <input type="password" id="password" class="auth-input" placeholder="パスワード (6文字以上)">
-        <button id="btnRegister" onclick="handleAuth(true)">新規登録</button>
-        <button id="btnAuth" onclick="handleAuth(false)">ログイン</button>
+        <div style="margin-top:20px;">
+            <button id="btnRegister" onclick="handleAuth(true)">新規登録</button>
+            <button id="btnAuth" onclick="handleAuth(false)" style="margin-top:10px;">ログイン</button>
+        </div>
+    </div>
+
+    <div id="profileScreen" class="screen">
+        <h2>✏️ ユーザーID設定</h2>
+        <p>X (Twitter) でのリザルト交換のため、<br><strong>@から始まるID</strong>を設定してください。</p>
+        <p style="font-size:0.85em; color:#dc3545;">※ @がない場合、対戦に参加できません。</p>
+        
+        <input type="text" id="settingsTaikoId" class="auth-input" placeholder="@Taiko_User">
+        
+        <div style="margin-top:20px;">
+            <button onclick="saveProfile()">保存して戻る</button>
+        </div>
     </div>
 
     <div id="titleScreen" class="screen">
         <h1>🥁 太鼓の達人<br>レーティングマッチ 🏆</h1>
-        <div class="rating-display">
-            RATING: <span id="playerRatingDisplay">1500</span>
+        
+        <div style="margin-bottom: 10px;">
+            <span style="color:#666;">ID:</span> <span id="displayMyId" style="font-weight:bold; color:#1DA1F2;"></span>
+            <button onclick="openProfileSettings()" style="padding: 5px 10px; font-size: 0.8em; width:auto; background:#6c757d; border-bottom:none;">変更</button>
         </div>
-        <p>実力が近い相手とマッチングし、<br>リザルト交換でレートを競おう！</p>
+
+        <div class="rating-display">
+            RATING: <span id="playerRatingDisplay">---</span>
+        </div>
         
         <div style="margin-top: 20px;">
-            <button onclick="startMatch('online')">⚔️ マッチング開始 (対人)</button>
-            <button onclick="startMatch('cpu')" style="background-color:#6c757d; border-bottom-color:#545b62;">🤖 CPUと練習 (テスト)</button>
+            <button onclick="startMatch()">⚔️ オンライン対戦を開始</button>
         </div>
         
-        <button id="btnFraudDemo" onclick="startFraudDemo()" style="background:#f89406; border-bottom-color:#cc7800; margin-top: 20px; padding: 10px 20px; font-size: 1.0em;">🚨 不正検知デモ (両者勝ち画面を見る)</button>
-        <button onclick="logout()" style="background:#dc3545; border-bottom-color:#bd2130; margin-top: 10px; padding: 10px 20px; font-size: 1.0em;">🚪 ログアウト</button>
+        <button onclick="logout()" style="background:#dc3545; border-bottom-color:#bd2130; margin-top: 20px;">🚪 ログアウト</button>
+    </div>
+
+    <div id="waitingScreen" class="screen" style="text-align: center;">
+        <h2 id="waitingScreenTitle">⏳ 検索中...</h2>
+        <div style="margin: 40px 0;">
+            <p class="pulse-text" style="font-size: 3em;">🥁</p>
+            <p style="font-size: 1.2em;" id="waitingScreenText"></p>
+        </div>
+        <button onclick="resetGame()" style="background:#999; border-bottom-color:#777;">キャンセル / タイトルへ</button>
     </div>
 
     <div id="matchResultScreen" class="screen">
         <h2 style="color: #28a745;">🎉 マッチング成立！</h2>
         
         <table class="player-detail-table">
-            <tr>
-                <th>あなた (Player)</th>
-                <td id="myInfoDisplay"></td>
-            </tr>
-            <tr>
-                <th>対戦相手 (Rival)</th>
-                <td id="opponentInfo"></td>
-            </tr>
+            <tr><th>あなた</th><td id="myInfoDisplay"></td></tr>
+            <tr><th>対戦相手</th><td id="opponentInfo"></td></tr>
         </table>
 
-        <h3>📂 今日の課題曲 (3曲)</h3>
-        <ul id="selectedSongs" class="music-list">
-            </ul>
+        <h3>📂 今回の課題曲</h3>
+        <ul id="selectedSongs" class="music-list"></ul>
         <button onclick="goToResultSubmission()">リザルト交換・結果申告へ ➡</button>
     </div>
 
     <div id="resultSubmissionScreen" class="screen">
         <h2>🗳️ 勝敗の申告</h2>
-        <p>リザルト画像を交換し、<br><strong>3曲合計の良の数</strong>で勝敗を決めてください。</p>
-        
         <div style="background:#f0f8ff; padding:10px; border-radius:10px; margin: 15px 0;">
             <span style="font-size:0.9em; color:#666;">対戦相手</span><br>
             <span id="opponentDisplayInSubmission" style="font-size: 1.4em; font-weight: 800; color: #1DA1F2;"></span>
         </div>
         
-        <h3 style="margin-top: 20px; font-size:1.1em;">今回の課題曲</h3>
-        <ul id="submissionSongs" class="music-list" style="font-size: 0.9em;">
-             </ul>
-
-        <div style="margin-top: 20px;">
-            <p style="font-weight:bold; margin-bottom:10px;">あなたの結果は？</p>
-            <div style="display:flex; gap:10px;">
-                <button id="btnWin" class="result-button" onclick="submitResult(1)">🏆 勝利 (Win)</button>
-                <button id="btnLoss" class="result-button" onclick="submitResult(0)">💀 敗北 (Lose)</button>
-            </div>
-            <button id="btnDraw" class="result-button" style="margin-top:0;" onclick="submitResult(0.5)">🤝 引き分け (Draw)</button>
+        <p style="font-weight:bold;">あなたの結果は？</p>
+        <div style="display:flex; gap:10px;">
+            <button id="btnWin" class="result-button" onclick="submitResult(1)">🏆 勝利</button>
+            <button id="btnLoss" class="result-button" onclick="submitResult(0)">💀 敗北</button>
         </div>
-    </div>
-    
-    <div id="waitingScreen" class="screen" style="text-align: center;">
-        <h2 id="waitingScreenTitle">⏳ 相手を探しています...</h2>
-        <div style="margin: 40px 0;">
-            <p class="pulse-text" style="font-size: 3em;">🥁</p>
-            <p style="font-size: 1.2em;" id="waitingScreenText">マッチングキューに登録しました。<br>実力が近いプレイヤーを検索中です。</p>
-        </div>
-        
-        <div style="margin-top: 30px;">
-            <button onclick="resetGame()" style="background:#999; border-bottom-color:#777; font-size:0.9em;">タイトルに戻る (強制中断)</button>
-        </div>
+        <button id="btnDraw" class="result-button" onclick="submitResult(0.5)" style="margin-top:0;">🤝 引き分け</button>
     </div>
 
     <div id="resultScreen" class="screen">
         <div id="resultHeading" class="result-heading-huge"></div>
-        <p>レーティング計算完了！</p>
-        
         <table class="rating-table">
-            <thead>
-                <tr>
-                    <th>PLAYER</th>
-                    <th>旧レート</th>
-                    <th>推移</th>
-                    <th>新レート</th>
-                </tr>
-            </thead>
+            <thead><tr><th>PLAYER</th><th>旧R</th><th>➡</th><th>新R</th></tr></thead>
             <tbody>
-                <tr>
-                    <td style="font-weight:bold;">あなた</td>
-                    <td id="playerOldR"></td>
-                    <td>➡</td>
-                    <td style="font-size:1.4em; font-weight:800;" id="playerNewR"></td>
-                </tr>
-                <tr>
-                    <td>RIVAL</td>
-                    <td id="cpuOldR"></td>
-                    <td>➡</td>
-                    <td id="cpuNewR"></td>
-                </tr>
+                <tr><td>あなた</td><td id="playerOldR"></td><td>➡</td><td id="playerNewR" style="font-weight:800; font-size:1.2em;"></td></tr>
+                <tr><td>RIVAL</td><td id="cpuOldR"></td><td>➡</td><td id="cpuNewR"></td></tr>
             </tbody>
         </table>
-        
-        <div style="margin: 20px 0; font-size: 2em; font-weight: 800;">
-            <span id="diffDisplay"></span>
-        </div>
-
+        <div style="margin: 20px 0; font-size: 2em; font-weight: 800;"><span id="diffDisplay"></span></div>
         <button onclick="resetGame()">🏠 タイトルに戻る</button>
     </div>
 
-
     <script>
-        // --- 設定値と初期データ ---
+        // --- データ定義 ---
         const SONG_POOL = [
             "Infinite Rebellion", "彁（裏）", "CRUXNAUT", "The Future of the 太鼓ドラム（裏）", 
             "神竜 ～Shinryu～（裏）", "憎悪と醜悪の花束（裏）", "ダーク・エクス・マキナ♡", 
@@ -377,90 +259,58 @@
         ];
         const K_FACTOR = 32;
         const INITIAL_RATING = 1500;
-        const SIMULATION_DELAY_MS = 4000; 
 
-        // --- ゲームステート (Firebase用変数に更新) ---
+        // --- ステート変数 ---
         let CURRENT_USER_ID = null;
         let CURRENT_USER_RATING = INITIAL_RATING;
-        let CURRENT_TAIKO_ID = "ゲスト";
+        let CURRENT_TAIKO_ID = "";
         
+        let CURRENT_MATCH_ID = null;
+        let IS_PLAYER_ONE = false;
+
         let opponentXId = null;
         let opponentUid = null;
-        let opponentRating = INITIAL_RATING; 
+        let opponentRating = INITIAL_RATING;
         
         let playerReportedResult = null;
         let opponentReportedResult = null;
-        let isFraudDemoMode = false;
         
-        let matchQueueListener = null;
+        // リスナー解除用関数保持
+        let searchOpponentUnsubscribe = null;
+        let myStatusUnsubscribe = null;
+        let opponentMatchListener = null;
 
-        // --- 認証・データ操作 ---
+        // --- 画面遷移 ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(el => {
+                el.classList.remove('visible');
+                setTimeout(() => { if(!el.classList.contains('visible')) el.style.display = 'none'; }, 400);
+            });
+            setTimeout(() => {
+                const t = document.getElementById(screenId);
+                t.style.display = 'flex';
+                void t.offsetWidth;
+                t.classList.add('visible');
+            }, 200);
+        }
 
+        // --- 認証 ---
         function handleAuth(isRegister) {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
-            if (email.length < 5 || password.length < 6) {
-                alert("入力内容を確認してください (パスワードは6文字以上)。");
-                return;
-            }
-
+            if (email.length < 5 || password.length < 6) { alert("入力内容を確認してください。"); return; }
+            
             if (isRegister) {
                 auth.createUserWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        initializeUserProfile(userCredential.user.uid, email);
-                    })
-                    .catch((error) => {
-                        alert("登録エラー: " + error.message);
-                    });
+                    .then(uc => initializeUserProfile(uc.user.uid, email))
+                    .catch(e => alert("登録エラー: " + e.message));
             } else {
-                auth.signInWithEmailAndPassword(email, password)
-                    .catch((error) => {
-                        alert("ログインエラー: " + error.message);
-                    });
+                auth.signInWithEmailAndPassword(email, password).catch(e => alert("ログインエラー: " + e.message));
             }
         }
-        
-        function logout() {
-             auth.signOut().then(() => {
-                 alert("ログアウトしました。");
-             });
-        }
-        
-        function initializeUserProfile(uid, email) {
-            const taikoId = 'Player_' + Math.random().toString(36).substring(2, 6).toUpperCase();
-            db.collection('users').doc(uid).set({
-                uid: uid,
-                email: email,
-                rating: INITIAL_RATING,
-                taikoId: taikoId,
-            }).then(() => {
-                loadUserProfile(uid);
-            });
-        }
-        
-        function loadUserProfile(uid) {
-            db.collection('users').doc(uid).get().then(doc => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    CURRENT_USER_RATING = data.rating;
-                    CURRENT_TAIKO_ID = data.taikoId;
-                    
-                    document.getElementById('playerRatingDisplay').textContent = Math.round(CURRENT_USER_RATING);
-                    showScreen('titleScreen');
-                }
-            });
-        }
-        
-        function saveNewRating(newRating) {
-            db.collection('users').doc(CURRENT_USER_ID).update({
-                rating: newRating
-            }).then(() => {
-                console.log("レーティングを保存しました。");
-            });
-        }
 
-        // --- 認証状態の監視 ---
+        function logout() { auth.signOut(); }
+
         auth.onAuthStateChanged(user => {
             if (user) {
                 CURRENT_USER_ID = user.uid;
@@ -470,89 +320,59 @@
             }
         });
 
-        // --- ユーティリティ関数 ---
-        function showScreen(screenId) { 
-            document.querySelectorAll('.screen').forEach(el => {
-                el.classList.remove('visible');
-                setTimeout(() => {
-                    if(!el.classList.contains('visible')) el.style.display = 'none';
-                }, 400);
+        // --- プロファイル操作 ---
+        function initializeUserProfile(uid, email) {
+            // 初期登録時は「ゲスト」として登録（@なし）
+            db.collection('users').doc(uid).set({
+                uid: uid, email: email, rating: INITIAL_RATING, taikoId: "Guest_User"
+            }).then(() => loadUserProfile(uid));
+        }
+
+        function loadUserProfile(uid) {
+            db.collection('users').doc(uid).get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    CURRENT_USER_RATING = data.rating;
+                    CURRENT_TAIKO_ID = data.taikoId || "NoName";
+                    
+                    document.getElementById('playerRatingDisplay').textContent = Math.round(CURRENT_USER_RATING);
+                    document.getElementById('displayMyId').textContent = CURRENT_TAIKO_ID;
+                    showScreen('titleScreen');
+                }
             });
-
-            setTimeout(() => {
-                const targetScreen = document.getElementById(screenId);
-                targetScreen.style.display = 'flex';
-                void targetScreen.offsetWidth;
-                targetScreen.classList.add('visible'); 
-            }, 200);
         }
 
-        function generateRandomXId(isCPU) {
-             if (isCPU) {
-                 const cpuNames = ["DON-Chan", "KATSU-Kun", "TaikoMaster", "DrumKing"];
-                 const suffix = Math.floor(Math.random() * 900) + 100;
-                 return `@${cpuNames[Math.floor(Math.random() * cpuNames.length)]}_${suffix}`;
-             }
-             return "@Rival_" + Math.random().toString(36).substring(2, 6).toUpperCase();
+        function openProfileSettings() {
+            document.getElementById('settingsTaikoId').value = CURRENT_TAIKO_ID;
+            showScreen('profileScreen');
         }
-        
-        // 🚨 修正箇所 1: 待機画面の表示内容を動的に切り替える関数
-        function showWaitingScreen(type, rivalName = null) {
-            const titleEl = document.getElementById('waitingScreenTitle');
-            const textEl = document.getElementById('waitingScreenText');
+
+        function saveProfile() {
+            const newId = document.getElementById('settingsTaikoId').value.trim();
+            if (newId.length < 1) return alert("IDを入力してください");
             
-            if (type === 'match') {
-                titleEl.textContent = '⏳ 相手を探しています...';
-                textEl.innerHTML = 'マッチングキューに登録しました。<br>実力が近いプレイヤーを検索中です。';
-            } else if (type === 'submission') {
-                titleEl.textContent = '⏳ 相手の申告待ち...';
-                textEl.innerHTML = `相手（<span style="color: #1DA1F2; font-weight:bold;">${rivalName || '相手'}</span>）が<br>結果を入力しています。`;
+            db.collection('users').doc(CURRENT_USER_ID).update({ taikoId: newId }).then(() => {
+                CURRENT_TAIKO_ID = newId;
+                document.getElementById('displayMyId').textContent = CURRENT_TAIKO_ID;
+                alert("IDを保存しました");
+                showScreen('titleScreen');
+            });
+        }
+
+        function saveNewRating(newRating) {
+            db.collection('users').doc(CURRENT_USER_ID).update({ rating: newRating });
+        }
+
+        // --- ゲーム開始前のチェック ---
+        function startMatch() {
+            // @から始まっているかチェック
+            if (!CURRENT_TAIKO_ID.startsWith('@')) {
+                alert("⚠️ マッチングには「@」から始まるX (Twitter) IDの設定が必須です。\n設定画面へ移動します。");
+                openProfileSettings();
+                return;
             }
 
-            showScreen('waitingScreen');
-        }
-
-        function resetGame() {
-            if (matchQueueListener) {
-                 matchQueueListener();
-                 matchQueueListener = null;
-                 db.collection('matchQueue').doc(CURRENT_USER_ID).delete(); 
-            }
-
-            playerReportedResult = null;
-            opponentReportedResult = null;
-            isFraudDemoMode = false;
-            
-            document.getElementById('playerRatingDisplay').textContent = Math.round(CURRENT_USER_RATING);
-            showScreen('titleScreen');
-        }
-
-        function selectRandomSongs(count) {
-            const shuffled = [...SONG_POOL].sort(() => 0.5 - Math.random());
-            return shuffled.slice(0, count);
-        }
-
-        // --- Elo計算ロジック ---
-        function calculateExpectedScore(Ra, Rb) { return 1.0 / (1.0 + Math.pow(10, (Rb - Ra) / 400)); }
-        function updateRating(R, E, S, K) { return R + K * (S - E); }
-
-        // --- ゲームフロー (Firebase統合) ---
-        
-        function startMatch(mode) {
-            isFraudDemoMode = false;
-
-            if (mode === 'cpu') {
-                 // CPU戦はローカルシミュレーションのまま
-                 opponentUid = 'CPU';
-                 opponentRating = CURRENT_USER_RATING + Math.floor(Math.random() * 300) - 150;
-                 opponentXId = generateRandomXId(true);
-                 handleMatchFound();
-                 return;
-            }
-
-            // --- オンラインマッチング ---
-            alert("マッチングキューに参加します。");
-            
+            // マッチング開始
             const matchData = {
                 uid: CURRENT_USER_ID,
                 taikoId: CURRENT_TAIKO_ID,
@@ -561,256 +381,262 @@
                 status: 'waiting',
             };
 
+            // 1. 自分の状態監視を開始 (相手が自分を見つけたとき用)
+            listenToMyStatus();
+
+            // 2. 待機キューに登録
             db.collection('matchQueue').doc(CURRENT_USER_ID).set(matchData)
                 .then(() => {
-                    listenForOpponent(CURRENT_USER_RATING);
-                    // 🚨 修正箇所 2: マッチング待機画面へ遷移
-                    showWaitingScreen('match'); 
+                    // 3. 積極的に相手を探す
+                    searchForOpponent(CURRENT_USER_RATING);
+                    
+                    // 待機画面表示
+                    document.getElementById('waitingScreenTitle').textContent = '⏳ 検索中...';
+                    document.getElementById('waitingScreenText').innerHTML = '実力が近いプレイヤーを探しています。<br>相手が見つかると自動で開始します。';
+                    showScreen('waitingScreen');
                 })
-                .catch(error => {
-                    alert("マッチングエラー: " + error.message);
+                .catch(e => alert("エラー: " + e.message));
+        }
+
+        // --- マッチングロジック (レースコンディション対策版) ---
+
+        // A. 自分のステータスが「matched」に変わるのを監視する (受動的)
+        function listenToMyStatus() {
+            if (myStatusUnsubscribe) myStatusUnsubscribe();
+            myStatusUnsubscribe = db.collection('matchQueue').doc(CURRENT_USER_ID)
+                .onSnapshot(doc => {
+                    if (!doc.exists) return;
+                    const data = doc.data();
+                    
+                    // 相手が処理を完了させた場合
+                    if (data.status === 'matched' && data.matchId) {
+                        // 検索や監視を停止
+                        cleanupListeners();
+                        
+                        // 自分がP1かどうかの判定 (UID比較)
+                        const isP1 = CURRENT_USER_ID < data.opponentUid;
+                        
+                        // 相手データの構築 (matchQueueには最小限の情報しか書かれない場合があるため)
+                        const oppData = {
+                            uid: data.opponentUid,
+                            taikoId: data.opponentTaikoId,
+                            rating: 0 // 仮。詳細はmatchesから取得
+                        };
+                        
+                        handleMatchFound(oppData, data.matchId, isP1);
+                    }
                 });
         }
-        
-        function startFraudDemo() {
-            isFraudDemoMode = true;
-            opponentUid = 'DEMO_CPU';
-            opponentRating = CURRENT_USER_RATING + Math.floor(Math.random() * 300) - 150;
-            opponentXId = "@FraudDemo_Rival";
 
-            alert("🚨 不正検知デモモードを開始します。\n\n次の画面で『勝利 (Win)』を選び、システムが両者勝ちを検知する様子を確認してください。");
-            handleMatchFound();
-        }
-
-        function listenForOpponent(playerR) {
-            if (matchQueueListener) matchQueueListener(); 
-
+        // B. 積極的に相手を探す (能動的)
+        function searchForOpponent(playerR) {
+            if (searchOpponentUnsubscribe) searchOpponentUnsubscribe();
+            
             const R_RANGE = 150; 
-
             const query = db.collection('matchQueue')
                 .where('status', '==', 'waiting')
                 .orderBy('rating', 'desc') 
-                .limit(5);
+                .limit(10);
 
-            matchQueueListener = query.onSnapshot(async snapshot => {
+            searchOpponentUnsubscribe = query.onSnapshot(async snapshot => {
                 let bestMatch = null;
                 let minDiff = Infinity;
 
                 snapshot.forEach(doc => {
-                    const opponent = doc.data();
-                    
-                    if (opponent.uid !== CURRENT_USER_ID) { 
-                        const diff = Math.abs(opponent.rating - playerR);
+                    const opp = doc.data();
+                    if (opp.uid !== CURRENT_USER_ID) { 
+                        const diff = Math.abs(opp.rating - playerR);
                         if (diff <= R_RANGE && diff < minDiff) {
                             minDiff = diff;
-                            bestMatch = opponent;
+                            bestMatch = opp;
                         }
                     }
                 });
                 
                 if (bestMatch) {
-                    matchQueueListener(); 
-                    
+                    // 相手発見！トランザクション実行
                     try {
-                        const result = await db.runTransaction(async transaction => {
-                            const playerRef = db.collection('matchQueue').doc(CURRENT_USER_ID);
-                            const opponentRef = db.collection('matchQueue').doc(bestMatch.uid);
+                        const res = await db.runTransaction(async t => {
+                            const pRef = db.collection('matchQueue').doc(CURRENT_USER_ID);
+                            const oRef = db.collection('matchQueue').doc(bestMatch.uid);
                             
-                            const playerDoc = await transaction.get(playerRef);
-                            const opponentDoc = await transaction.get(opponentRef);
+                            const pDoc = await t.get(pRef);
+                            const oDoc = await t.get(oRef);
 
-                            if (playerDoc.data().status === 'waiting' && opponentDoc.data().status === 'waiting') {
+                            if (pDoc.exists && oDoc.exists && 
+                                pDoc.data().status === 'waiting' && oDoc.data().status === 'waiting') {
                                 
-                                const matchId = CURRENT_USER_ID.substring(0, 4) + bestMatch.uid.substring(0, 4) + Date.now();
+                                const mId = CURRENT_USER_ID.substring(0,4) + bestMatch.uid.substring(0,4) + Date.now();
+                                const isP1 = CURRENT_USER_ID < bestMatch.uid;
                                 
-                                transaction.update(playerRef, { status: 'matched', opponentUid: bestMatch.uid, matchId: matchId, opponentTaikoId: bestMatch.taikoId });
-                                transaction.update(opponentRef, { status: 'matched', opponentUid: CURRENT_USER_ID, matchId: matchId, opponentTaikoId: CURRENT_TAIKO_ID });
+                                // キュー更新
+                                t.update(pRef, { status: 'matched', opponentUid: bestMatch.uid, matchId: mId, opponentTaikoId: bestMatch.taikoId });
+                                t.update(oRef, { status: 'matched', opponentUid: CURRENT_USER_ID, matchId: mId, opponentTaikoId: CURRENT_TAIKO_ID });
                                 
-                                return {opponent: bestMatch, matchId: matchId};
+                                // 対戦データ作成
+                                t.set(db.collection('matches').doc(mId), {
+                                    matchId: mId,
+                                    p1Uid: isP1 ? CURRENT_USER_ID : bestMatch.uid,
+                                    p2Uid: isP1 ? bestMatch.uid : CURRENT_USER_ID,
+                                    p1Rating: isP1 ? CURRENT_USER_RATING : bestMatch.rating,
+                                    p2Rating: isP1 ? bestMatch.rating : CURRENT_USER_RATING,
+                                    p1Reported: false, p2Reported: false, status: 'waiting_result',
+                                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                                return true; 
                             }
-                            throw new Error("相手が既にマッチングを成立させました。");
+                            return false; 
                         });
-                        
-                        handleMatchFound(result.opponent);
 
-                    } catch (error) {
-                        console.error("トランザクション失敗:", error);
-                        alert("マッチングに失敗しました。再度お試しください。");
-                        resetGame();
+                        if (res) {
+                            // 成功したら検索停止 (listenToMyStatusが画面遷移を行うのを待つ)
+                            if (searchOpponentUnsubscribe) searchOpponentUnsubscribe();
+                        }
+                    } catch (e) {
+                        console.log("競合発生: " + e);
+                        // リセットせず、listenToMyStatus に任せるか、次のスナップショットで再検索
                     }
                 }
             });
         }
-        
-        function handleMatchFound(opponentData) {
-            if (opponentData) {
-                 opponentUid = opponentData.uid;
-                 opponentRating = opponentData.rating;
-                 opponentXId = opponentData.taikoId;
-            }
-            
-            document.getElementById('myInfoDisplay').innerHTML = 
-                 `<span style="color:#007bff; font-weight:bold;">${CURRENT_TAIKO_ID}</span><br>Rating: ${Math.round(CURRENT_USER_RATING)}`;
-            document.getElementById('opponentInfo').innerHTML = 
-                 `<span style="color:#e44d26; font-weight:bold;">${opponentXId}</span><br>Rating: ${Math.round(opponentRating)}`;
 
-            let selectedSongs = selectRandomSongs(3);
-            const songListElement = document.getElementById('selectedSongs');
-            const submissionSongsElement = document.getElementById('submissionSongs');
-            songListElement.innerHTML = '';
-            submissionSongsElement.innerHTML = '';
-            selectedSongs.forEach((song, index) => {
-                const li = document.createElement('li');
-                li.innerHTML = `<span style="color:#999; margin-right:5px;">#${index+1}</span> ${song}`;
-                li.style.animation = `fadeIn 0.5s ease forwards ${index * 0.1}s`;
-                li.style.opacity = '0';
-                songListElement.appendChild(li.cloneNode(true));
-                submissionSongsElement.appendChild(li); // 結果申告画面にも反映
+        // --- マッチング成立後の処理 ---
+        function handleMatchFound(oppData, matchId, isP1) {
+            opponentUid = oppData.uid;
+            opponentXId = oppData.taikoId;
+            CURRENT_MATCH_ID = matchId; 
+            IS_PLAYER_ONE = isP1;
+
+            // 正確なレートを取得して表示
+            db.collection('matches').doc(matchId).get().then(doc => {
+                const md = doc.data();
+                opponentRating = isP1 ? md.p2Rating : md.p1Rating;
+                
+                document.getElementById('myInfoDisplay').innerHTML = 
+                    `<span style="color:#007bff; font-weight:bold;">${CURRENT_TAIKO_ID}</span><br>R: ${Math.round(CURRENT_USER_RATING)}`;
+                document.getElementById('opponentInfo').innerHTML = 
+                    `<span style="color:#e44d26; font-weight:bold;">${opponentXId}</span><br>R: ${Math.round(opponentRating)}`;
             });
 
+            // 選曲
+            const songs = selectRandomSongs(3);
+            const list = document.getElementById('selectedSongs');
+            const subList = document.getElementById('submissionSongs');
+            list.innerHTML = ''; subList.innerHTML = '';
+            
+            songs.forEach((s, i) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span style="color:#999; margin-right:5px;">#${i+1}</span> ${s}`;
+                list.appendChild(li.cloneNode(true));
+                subList.appendChild(li);
+            });
+
+            // 安全にキュー削除
+            db.collection('matchQueue').doc(CURRENT_USER_ID).delete().catch(()=>{});
             showScreen('matchResultScreen');
         }
 
-        // --- 申告・結果処理ロジック (追加) ---
-
+        // --- 結果処理 ---
         function goToResultSubmission() {
              document.getElementById('opponentDisplayInSubmission').textContent = opponentXId;
              showScreen('resultSubmissionScreen');
         }
 
         function submitResult(pResult) {
+            const act = pResult === 1 ? "勝利" : (pResult === 0 ? "敗北" : "引き分け");
+            if (!confirm(`「${act}」で確定しますか？`)) return;
+
             playerReportedResult = pResult;
-            
-            if (opponentUid === 'CPU' || isFraudDemoMode) {
-                // CPU戦またはデモの場合は即座に相手の結果をシミュレート
-                simulateCpuSubmission(pResult);
-            } else {
-                // オンライン対戦の場合: 自分の結果をDBに書き込み、相手の申告を待つ
-                // (注意: リアルタイム通信ロジックは実装されていませんが、フローは完成させます)
-                
-                // 🚨 修正箇所 3: 申告待ち画面へ遷移
-                showWaitingScreen('submission', opponentXId);
-                
-                // 実際にはここで DB に結果を書き込み、相手の結果をポーリングするリスナーを設定します。
-                // 今回はデモのため、相手の申告は「手動で別端末から行う」か「時間経過でエラー」を想定します。
-                
-                // 3秒後に強制的に結果チェック (相手が申告済みと仮定)
-                setTimeout(() => {
-                     // サーバー処理をシミュレート
-                     if (isFraudDemoMode) {
-                          // デモモードでは、相手も勝ち(1)を申告したと仮定
-                          opponentReportedResult = 1; 
-                          checkResultsAndCalculate();
-                     } else {
-                          // 相手が未申告の場合は時間切れ/タイトルへ
-                          // alert('相手の申告が確認できませんでした。タイトルに戻ります。');
-                          // resetGame();
-                          // 一旦、オンラインでも簡易処理を行う (デモ用)
-                          opponentReportedResult = (pResult === 1) ? 0 : (pResult === 0) ? 1 : 0.5;
-                          checkResultsAndCalculate();
-                     }
-                }, 3000); 
-            }
+            const myField = IS_PLAYER_ONE ? 'p1' : 'p2';
+
+            db.collection('matches').doc(CURRENT_MATCH_ID).update({
+                [`${myField}Result`]: pResult,
+                [`${myField}Reported`]: true,
+            }).then(() => {
+                document.getElementById('waitingScreenTitle').textContent = '⏳ 相手の申告待ち...';
+                document.getElementById('waitingScreenText').innerHTML = `相手（<span style="color: #1DA1F2;">${opponentXId}</span>）の入力待ちです。`;
+                showScreen('waitingScreen');
+                listenForResult();
+            });
         }
 
-        function simulateCpuSubmission(playerResult) {
-            // CPUはプレイヤーと逆の結果を申告するロジック (引き分けは半々)
-            if (isFraudDemoMode) {
-                 opponentReportedResult = 1; // デモ: 相手も「勝ち」を申告
-            } else {
-                 opponentReportedResult = (playerResult === 1) ? 0 : (playerResult === 0) ? 1 : 0.5;
-            }
-            checkResultsAndCalculate();
+        function listenForResult() {
+            if (opponentMatchListener) opponentMatchListener();
+            opponentMatchListener = db.collection('matches').doc(CURRENT_MATCH_ID)
+                .onSnapshot(doc => {
+                    if (!doc.exists) return;
+                    const d = doc.data();
+                    const oppReported = IS_PLAYER_ONE ? d.p2Reported : d.p1Reported;
+                    
+                    if (oppReported) {
+                        opponentMatchListener(); // 解除
+                        opponentReportedResult = IS_PLAYER_ONE ? d.p2Result : d.p1Result;
+                        calcResult();
+                    }
+                });
         }
 
-        function checkResultsAndCalculate() {
-            let finalResult = playerReportedResult;
-            let resultText = '';
-            let resultClass = '';
+        function calcResult() {
+            let finalRes = playerReportedResult;
+            let txt = "", cls = "";
             
-            // 不正検知 (両者勝ち/両者負け)
+            // 不正検知
             if (playerReportedResult === 1 && opponentReportedResult === 1) {
-                resultText = "⚠️ 不正検知 (両者勝ち)";
-                resultClass = "draw-text";
-                finalResult = 0.5; // レート変動は引き分けとして処理
-                alert("🚨 両者から勝利の申告がありました。不正行為を検知したため、結果は『引き分け』として処理されます。");
+                txt = "⚠️ 両者勝利申告 (無効試合)"; cls = "draw-text"; finalRes = 0.5;
+                alert("両者勝利申告のため、引き分け処理となります。");
             } else if (playerReportedResult === 0 && opponentReportedResult === 0) {
-                 resultText = "⚠️ 不正検知 (両者負け)";
-                 resultClass = "draw-text";
-                 finalResult = 0.5; // レート変動は引き分けとして処理
-                 alert("🚨 両者から敗北の申告がありました。不正行為を検知したため、結果は『引き分け』として処理されます。");
+                txt = "⚠️ 両者敗北申告 (無効試合)"; cls = "draw-text"; finalRes = 0.5;
             } else if (playerReportedResult === opponentReportedResult) {
-                resultText = "🤝 引き分け";
-                resultClass = "draw-text";
+                txt = "🤝 引き分け"; cls = "draw-text";
             } else if (playerReportedResult === 1) {
-                resultText = "🏆 勝利！";
-                resultClass = "win-text";
-            } else { // pResult === 0
-                resultText = "💀 敗北";
-                resultClass = "lose-text";
+                txt = "🏆 勝利！"; cls = "win-text";
+            } else {
+                txt = "💀 敗北"; cls = "lose-text";
             }
 
-            calculateAndDisplayRating(finalResult, resultText, resultClass);
-        }
-        
-        function calculateAndDisplayRating(pResult, rText, rClass) {
+            // Elo計算
+            const exScore = calculateExpectedScore(CURRENT_USER_RATING, opponentRating);
+            const newR = Math.round(updateRating(CURRENT_USER_RATING, exScore, finalRes, K_FACTOR));
             
-            // 1. Elo計算
-            const expectedPlayerScore = calculateExpectedScore(CURRENT_USER_RATING, opponentRating);
-            const oldPlayerR = CURRENT_USER_RATING;
-            const newPlayerR = updateRating(oldPlayerR, expectedPlayerScore, pResult, K_FACTOR);
+            saveNewRating(newR);
             
-            // 2. データベースの更新
-            saveNewRating(newPlayerR); 
-            CURRENT_USER_RATING = newPlayerR; 
+            // 相手の計算(表示用)
+            const oppNewR = Math.round(updateRating(opponentRating, 1-exScore, 1-finalRes, K_FACTOR));
+            const diff = newR - Math.round(CURRENT_USER_RATING);
 
-            // 3. 画面表示更新とアニメーション
-            const oldCpuR = opponentRating;
-            const newCpuR = updateRating(oldCpuR, 1 - expectedPlayerScore, 1 - pResult, K_FACTOR);
-            const deltaPlayerR = Math.round(newPlayerR - oldPlayerR);
+            document.getElementById('resultHeading').textContent = txt;
+            document.getElementById('resultHeading').className = "result-heading-huge " + cls;
             
-            const resultHeading = document.getElementById('resultHeading');
-            resultHeading.textContent = rText;
-            resultHeading.className = "result-heading-huge " + rClass;
+            document.getElementById('playerOldR').textContent = Math.round(CURRENT_USER_RATING);
+            document.getElementById('playerNewR').textContent = newR;
+            document.getElementById('cpuOldR').textContent = Math.round(opponentRating);
+            document.getElementById('cpuNewR').textContent = oppNewR;
 
-            document.getElementById('playerOldR').textContent = Math.round(oldPlayerR);
-            document.getElementById('playerNewR').textContent = Math.round(oldPlayerR); 
-            document.getElementById('cpuOldR').textContent = Math.round(oldCpuR);
-            document.getElementById('cpuNewR').textContent = Math.round(oldCpuR);
+            const diffEl = document.getElementById('diffDisplay');
+            diffEl.textContent = (diff > 0 ? "+" : "") + diff;
+            diffEl.style.color = diff > 0 ? 'blue' : (diff < 0 ? 'red' : 'gray');
             
+            CURRENT_USER_RATING = newR; // 更新
             showScreen('resultScreen');
-
-            setTimeout(() => {
-                animateValue("playerNewR", Math.round(oldPlayerR), Math.round(newPlayerR), 1500);
-                animateValue("cpuNewR", Math.round(oldCpuR), Math.round(newCpuR), 1500);
-                
-                const diffEl = document.getElementById('diffDisplay');
-                 if(deltaPlayerR > 0) { diffEl.textContent = `+${deltaPlayerR}`; diffEl.style.color = 'blue'; } 
-                 else if (deltaPlayerR < 0) { diffEl.textContent = `${deltaPlayerR}`; diffEl.style.color = 'red'; }
-                 else { diffEl.textContent = `±0`; diffEl.style.color = '#777'; }
-            }, 500); 
         }
 
-        function animateValue(id, start, end, duration) {
-            const range = end - start;
-            let current = start;
-            const increment = end > start ? 1 : -1;
-            const stepTime = Math.abs(Math.floor(duration / Math.abs(range)));
-            const obj = document.getElementById(id);
-
-            const timer = setInterval(() => {
-                current += increment;
-                obj.textContent = Math.round(current);
-                if (current === end) {
-                    clearInterval(timer);
-                }
-            }, stepTime);
+        function cleanupListeners() {
+            if (searchOpponentUnsubscribe) { searchOpponentUnsubscribe(); searchOpponentUnsubscribe = null; }
+            if (myStatusUnsubscribe) { myStatusUnsubscribe(); myStatusUnsubscribe = null; }
+            if (opponentMatchListener) { opponentMatchListener(); opponentMatchListener = null; }
         }
 
+        function resetGame() {
+            cleanupListeners();
+            if (CURRENT_USER_ID) db.collection('matchQueue').doc(CURRENT_USER_ID).delete().catch(()=>{});
+            
+            playerReportedResult = null; opponentReportedResult = null; CURRENT_MATCH_ID = null;
+            document.getElementById('playerRatingDisplay').textContent = Math.round(CURRENT_USER_RATING);
+            showScreen('titleScreen');
+        }
 
-        // 初期化
+        // 初期ロード
         document.addEventListener("DOMContentLoaded", () => {
-             // 認証リスナーが初期画面を制御するため、初回のみauthScreenを表示
              document.getElementById('authScreen').style.display = 'flex';
              setTimeout(()=>document.getElementById('authScreen').classList.add('visible'), 100);
         });
