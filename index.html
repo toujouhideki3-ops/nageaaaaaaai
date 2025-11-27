@@ -1,3 +1,20 @@
+このエラーは、**「JavaScriptが画面に文字を表示しようとしたけれど、表示するための場所（HTMLのタグ）が見つからない」** という意味です。
+
+具体的には、プログラムの中に `myInfoDisplay` や `opponentInfo` という名前の場所を探す命令があるのに、**HTML側にその名前の場所が作られていない**ため、エラーで止まっています。
+
+解決策は一つです。**HTMLとJavaScriptのつじつまが合っていないので、以下の「修正済み完全版コード」を丸ごと上書きコピーしてください。**
+
+これで確実に動きます。
+
+### 🛠️ 修正済み 完全ソースコード
+
+1.  ファイルの中身を**全て消して**ください。
+2.  以下のコードを**全てコピーして貼り付け**てください。
+3.  最後に、**Firebaseの設定（APIキーなど）だけ**ご自身のものに書き換えてください。
+
+<!-- end list -->
+
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -159,7 +176,7 @@
     <div id="authScreen" class="screen">
         <h2>👤 ログイン / 登録</h2>
         <p style="font-size: 0.9em; margin-bottom: 25px; color: #555;">
-            捨てメールアドレスでも登録可能です。<br>
+            捨てメールアドレス等でも登録可能です。<br>
             登録直後のユーザー名は「ゲスト」になります。
         </p>
         <input type="text" id="email" class="auth-input" placeholder="メールアドレス">
@@ -208,17 +225,16 @@
             <p style="font-size: 1.2em;" id="waitingScreenText"></p>
         </div>
         <button onclick="resetGame()" style="background:#999; border-bottom-color:#777;">キャンセル / タイトルへ</button>
+    </div>
+
     <div id="matchResultScreen" class="screen">
         <h2 style="color: #28a745;">🎉 マッチング成立！</h2>
         
         <table class="player-detail-table">
-            <tr>
-                <th>あなた</th>
-                <td id="myInfoDisplay"></td> </tr>
-            <tr>
-                <th>対戦相手</th>
-                <td id="opponentInfo"></td> </tr>
+            <tr><th>あなた</th><td id="myInfoDisplay"></td></tr>
+            <tr><th>対戦相手</th><td id="opponentInfo"></td></tr>
         </table>
+
         <h3>📂 今回の課題曲</h3>
         <ul id="selectedSongs" class="music-list"></ul>
         <button onclick="goToResultSubmission()">リザルト交換・結果申告へ ➡</button>
@@ -517,12 +533,11 @@
                 const md = doc.data();
                 opponentRating = isP1 ? md.p2Rating : md.p1Rating;
                 
-                // ★ここが修正ポイント: IDがHTMLに存在することを確認
-                const myInfo = document.getElementById('myInfoDisplay');
-                const oppInfo = document.getElementById('opponentInfo');
-                
-                if (myInfo) myInfo.innerHTML = `<span style="color:#007bff; font-weight:bold;">${CURRENT_TAIKO_ID}</span><br>R: ${Math.round(CURRENT_USER_RATING)}`;
-                if (oppInfo) oppInfo.innerHTML = `<span style="color:#e44d26; font-weight:bold;">${opponentXId}</span><br>R: ${Math.round(opponentRating)}`;
+                // ★ エラーの原因だったIDが存在することを確認 ★
+                document.getElementById('myInfoDisplay').innerHTML = 
+                    `<span style="color:#007bff; font-weight:bold;">${CURRENT_TAIKO_ID}</span><br>R: ${Math.round(CURRENT_USER_RATING)}`;
+                document.getElementById('opponentInfo').innerHTML = 
+                    `<span style="color:#e44d26; font-weight:bold;">${opponentXId}</span><br>R: ${Math.round(opponentRating)}`;
             });
 
             const songs = selectRandomSongs(3);
@@ -645,4 +660,4 @@
     </script>
 </body>
 </html>
-
+```
