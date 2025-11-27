@@ -208,16 +208,17 @@
             <p style="font-size: 1.2em;" id="waitingScreenText"></p>
         </div>
         <button onclick="resetGame()" style="background:#999; border-bottom-color:#777;">キャンセル / タイトルへ</button>
-    </div>
-
     <div id="matchResultScreen" class="screen">
         <h2 style="color: #28a745;">🎉 マッチング成立！</h2>
         
         <table class="player-detail-table">
-            <tr><th>あなた</th><td id="myInfoDisplay"></td></tr>
-            <tr><th>対戦相手</th><td id="opponentInfo"></td></tr>
+            <tr>
+                <th>あなた</th>
+                <td id="myInfoDisplay"></td> </tr>
+            <tr>
+                <th>対戦相手</th>
+                <td id="opponentInfo"></td> </tr>
         </table>
-
         <h3>📂 今回の課題曲</h3>
         <ul id="selectedSongs" class="music-list"></ul>
         <button onclick="goToResultSubmission()">リザルト交換・結果申告へ ➡</button>
@@ -644,3 +645,4 @@
     </script>
 </body>
 </html>
+
