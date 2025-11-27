@@ -24,6 +24,7 @@
 };
 
 
+        // Firebaseの初期化
         const app = firebase.initializeApp(firebaseConfig);
         const auth = app.auth();
         const db = app.firestore();
@@ -251,7 +252,8 @@
     </div>
 
     <script>
-        // --- データ定義 ---
+        // --- 定数・ユーティリティ関数 (ここが重要！エラーの原因だった箇所) ---
+        
         const SONG_POOL = [
             "Infinite Rebellion", "彁（裏）", "CRUXNAUT", "The Future of the 太鼓ドラム（裏）", 
             "神竜 ～Shinryu～（裏）", "憎悪と醜悪の花束（裏）", "ダーク・エクス・マキナ♡", 
@@ -261,6 +263,22 @@
         ];
         const K_FACTOR = 32;
         const INITIAL_RATING = 1500;
+
+        // ランダム選曲関数
+        function selectRandomSongs(count) {
+            const shuffled = [...SONG_POOL].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // 勝率計算関数
+        function calculateExpectedScore(Ra, Rb) {
+            return 1.0 / (1.0 + Math.pow(10, (Rb - Ra) / 400));
+        }
+
+        // レート更新計算関数
+        function updateRating(R, E, S, K) {
+            return R + K * (S - E);
+        }
 
         // --- ステート変数 ---
         let CURRENT_USER_ID = null;
@@ -277,7 +295,6 @@
         let playerReportedResult = null;
         let opponentReportedResult = null;
         
-        // リスナー解除用関数保持
         let searchOpponentUnsubscribe = null;
         let myStatusUnsubscribe = null;
         let opponentMatchListener = null;
@@ -324,7 +341,7 @@
 
         // --- プロファイル操作 ---
         function initializeUserProfile(uid, email) {
-            // 初期登録時は「ゲスト」として登録（@なし）
+            // 初期登録時は「ゲスト」として登録
             db.collection('users').doc(uid).set({
                 uid: uid, email: email, rating: INITIAL_RATING, taikoId: "Guest_User"
             }).then(() => loadUserProfile(uid));
@@ -365,16 +382,15 @@
             db.collection('users').doc(CURRENT_USER_ID).update({ rating: newRating });
         }
 
-        // --- ゲーム開始前のチェック ---
+        // --- ゲーム開始 ---
         function startMatch() {
-            // @から始まっているかチェック
+            // @チェック
             if (!CURRENT_TAIKO_ID.startsWith('@')) {
-                alert("⚠️ マッチングには「@」から始まるX (Twitter) IDの設定が必須です。\n設定画面へ移動します。");
+                alert("⚠️ マッチングには「@」から始まるIDの設定が必要です。\n設定画面へ移動します。");
                 openProfileSettings();
                 return;
             }
 
-            // マッチング開始
             const matchData = {
                 uid: CURRENT_USER_ID,
                 taikoId: CURRENT_TAIKO_ID,
@@ -383,16 +399,15 @@
                 status: 'waiting',
             };
 
-            // 1. 自分の状態監視を開始 (相手が自分を見つけたとき用)
+            // 1. 自分の状態監視 (受動的)
             listenToMyStatus();
 
-            // 2. 待機キューに登録
+            // 2. 待機キュー登録
             db.collection('matchQueue').doc(CURRENT_USER_ID).set(matchData)
                 .then(() => {
-                    // 3. 積極的に相手を探す
+                    // 3. 相手検索 (能動的)
                     searchForOpponent(CURRENT_USER_RATING);
                     
-                    // 待機画面表示
                     document.getElementById('waitingScreenTitle').textContent = '⏳ 検索中...';
                     document.getElementById('waitingScreenText').innerHTML = '実力が近いプレイヤーを探しています。<br>相手が見つかると自動で開始します。';
                     showScreen('waitingScreen');
@@ -400,9 +415,8 @@
                 .catch(e => alert("エラー: " + e.message));
         }
 
-        // --- マッチングロジック (レースコンディション対策版) ---
+        // --- マッチングロジック ---
 
-        // A. 自分のステータスが「matched」に変わるのを監視する (受動的)
         function listenToMyStatus() {
             if (myStatusUnsubscribe) myStatusUnsubscribe();
             myStatusUnsubscribe = db.collection('matchQueue').doc(CURRENT_USER_ID)
@@ -410,27 +424,21 @@
                     if (!doc.exists) return;
                     const data = doc.data();
                     
-                    // 相手が処理を完了させた場合
                     if (data.status === 'matched' && data.matchId) {
-                        // 検索や監視を停止
                         cleanupListeners();
                         
-                        // 自分がP1かどうかの判定 (UID比較)
                         const isP1 = CURRENT_USER_ID < data.opponentUid;
                         
-                        // 相手データの構築 (matchQueueには最小限の情報しか書かれない場合があるため)
                         const oppData = {
                             uid: data.opponentUid,
                             taikoId: data.opponentTaikoId,
-                            rating: 0 // 仮。詳細はmatchesから取得
+                            rating: 0 
                         };
-                        
                         handleMatchFound(oppData, data.matchId, isP1);
                     }
                 });
         }
 
-        // B. 積極的に相手を探す (能動的)
         function searchForOpponent(playerR) {
             if (searchOpponentUnsubscribe) searchOpponentUnsubscribe();
             
@@ -456,12 +464,10 @@
                 });
                 
                 if (bestMatch) {
-                    // 相手発見！トランザクション実行
                     try {
                         const res = await db.runTransaction(async t => {
                             const pRef = db.collection('matchQueue').doc(CURRENT_USER_ID);
                             const oRef = db.collection('matchQueue').doc(bestMatch.uid);
-                            
                             const pDoc = await t.get(pRef);
                             const oDoc = await t.get(oRef);
 
@@ -471,11 +477,9 @@
                                 const mId = CURRENT_USER_ID.substring(0,4) + bestMatch.uid.substring(0,4) + Date.now();
                                 const isP1 = CURRENT_USER_ID < bestMatch.uid;
                                 
-                                // キュー更新
                                 t.update(pRef, { status: 'matched', opponentUid: bestMatch.uid, matchId: mId, opponentTaikoId: bestMatch.taikoId });
                                 t.update(oRef, { status: 'matched', opponentUid: CURRENT_USER_ID, matchId: mId, opponentTaikoId: CURRENT_TAIKO_ID });
                                 
-                                // 対戦データ作成
                                 t.set(db.collection('matches').doc(mId), {
                                     matchId: mId,
                                     p1Uid: isP1 ? CURRENT_USER_ID : bestMatch.uid,
@@ -491,25 +495,22 @@
                         });
 
                         if (res) {
-                            // 成功したら検索停止 (listenToMyStatusが画面遷移を行うのを待つ)
                             if (searchOpponentUnsubscribe) searchOpponentUnsubscribe();
                         }
                     } catch (e) {
-                        console.log("競合発生: " + e);
-                        // リセットせず、listenToMyStatus に任せるか、次のスナップショットで再検索
+                        console.log("競合発生(再試行): " + e);
                     }
                 }
             });
         }
 
-        // --- マッチング成立後の処理 ---
+        // --- 成立後の処理 ---
         function handleMatchFound(oppData, matchId, isP1) {
             opponentUid = oppData.uid;
             opponentXId = oppData.taikoId;
             CURRENT_MATCH_ID = matchId; 
             IS_PLAYER_ONE = isP1;
 
-            // 正確なレートを取得して表示
             db.collection('matches').doc(matchId).get().then(doc => {
                 const md = doc.data();
                 opponentRating = isP1 ? md.p2Rating : md.p1Rating;
@@ -520,7 +521,6 @@
                     `<span style="color:#e44d26; font-weight:bold;">${opponentXId}</span><br>R: ${Math.round(opponentRating)}`;
             });
 
-            // 選曲
             const songs = selectRandomSongs(3);
             const list = document.getElementById('selectedSongs');
             const subList = document.getElementById('submissionSongs');
@@ -533,7 +533,6 @@
                 subList.appendChild(li);
             });
 
-            // 安全にキュー削除
             db.collection('matchQueue').doc(CURRENT_USER_ID).delete().catch(()=>{});
             showScreen('matchResultScreen');
         }
@@ -571,7 +570,7 @@
                     const oppReported = IS_PLAYER_ONE ? d.p2Reported : d.p1Reported;
                     
                     if (oppReported) {
-                        opponentMatchListener(); // 解除
+                        opponentMatchListener(); 
                         opponentReportedResult = IS_PLAYER_ONE ? d.p2Result : d.p1Result;
                         calcResult();
                     }
@@ -584,10 +583,10 @@
             
             // 不正検知
             if (playerReportedResult === 1 && opponentReportedResult === 1) {
-                txt = "⚠️ 両者勝利申告 (無効試合)"; cls = "draw-text"; finalRes = 0.5;
+                txt = "⚠️ 両者勝利申告 (無効)"; cls = "draw-text"; finalRes = 0.5;
                 alert("両者勝利申告のため、引き分け処理となります。");
             } else if (playerReportedResult === 0 && opponentReportedResult === 0) {
-                txt = "⚠️ 両者敗北申告 (無効試合)"; cls = "draw-text"; finalRes = 0.5;
+                txt = "⚠️ 両者敗北申告 (無効)"; cls = "draw-text"; finalRes = 0.5;
             } else if (playerReportedResult === opponentReportedResult) {
                 txt = "🤝 引き分け"; cls = "draw-text";
             } else if (playerReportedResult === 1) {
@@ -596,13 +595,11 @@
                 txt = "💀 敗北"; cls = "lose-text";
             }
 
-            // Elo計算
             const exScore = calculateExpectedScore(CURRENT_USER_RATING, opponentRating);
             const newR = Math.round(updateRating(CURRENT_USER_RATING, exScore, finalRes, K_FACTOR));
             
             saveNewRating(newR);
             
-            // 相手の計算(表示用)
             const oppNewR = Math.round(updateRating(opponentRating, 1-exScore, 1-finalRes, K_FACTOR));
             const diff = newR - Math.round(CURRENT_USER_RATING);
 
@@ -618,7 +615,7 @@
             diffEl.textContent = (diff > 0 ? "+" : "") + diff;
             diffEl.style.color = diff > 0 ? 'blue' : (diff < 0 ? 'red' : 'gray');
             
-            CURRENT_USER_RATING = newR; // 更新
+            CURRENT_USER_RATING = newR; 
             showScreen('resultScreen');
         }
 
@@ -637,7 +634,6 @@
             showScreen('titleScreen');
         }
 
-        // 初期ロード
         document.addEventListener("DOMContentLoaded", () => {
              document.getElementById('authScreen').style.display = 'flex';
              setTimeout(()=>document.getElementById('authScreen').classList.add('visible'), 100);
@@ -645,4 +641,3 @@
     </script>
 </body>
 </html>
-
