@@ -159,7 +159,7 @@
     <div id="authScreen" class="screen">
         <h2>👤 ログイン / 登録</h2>
         <p style="font-size: 0.9em; margin-bottom: 25px; color: #555;">
-            捨てメールアドレス等でも登録可能です。<br>
+            捨てメールアドレスでも登録可能です。<br>
             登録直後のユーザー名は「ゲスト」になります。
         </p>
         <input type="text" id="email" class="auth-input" placeholder="メールアドレス">
@@ -252,7 +252,7 @@
     </div>
 
     <script>
-        // --- 定数・ユーティリティ関数 (ここが重要！エラーの原因だった箇所) ---
+        // --- 定数・ユーティリティ関数 ---
         
         const SONG_POOL = [
             "Infinite Rebellion", "彁（裏）", "CRUXNAUT", "The Future of the 太鼓ドラム（裏）", 
@@ -295,6 +295,7 @@
         let playerReportedResult = null;
         let opponentReportedResult = null;
         
+        // リスナー解除用関数保持
         let searchOpponentUnsubscribe = null;
         let myStatusUnsubscribe = null;
         let opponentMatchListener = null;
@@ -405,7 +406,7 @@
             // 2. 待機キュー登録
             db.collection('matchQueue').doc(CURRENT_USER_ID).set(matchData)
                 .then(() => {
-                    // 3. 相手検索 (能動的)
+                    // 3. 積極的に相手を探す
                     searchForOpponent(CURRENT_USER_RATING);
                     
                     document.getElementById('waitingScreenTitle').textContent = '⏳ 検索中...';
@@ -515,10 +516,12 @@
                 const md = doc.data();
                 opponentRating = isP1 ? md.p2Rating : md.p1Rating;
                 
-                document.getElementById('myInfoDisplay').innerHTML = 
-                    `<span style="color:#007bff; font-weight:bold;">${CURRENT_TAIKO_ID}</span><br>R: ${Math.round(CURRENT_USER_RATING)}`;
-                document.getElementById('opponentInfo').innerHTML = 
-                    `<span style="color:#e44d26; font-weight:bold;">${opponentXId}</span><br>R: ${Math.round(opponentRating)}`;
+                // ★ここが修正ポイント: IDがHTMLに存在することを確認
+                const myInfo = document.getElementById('myInfoDisplay');
+                const oppInfo = document.getElementById('opponentInfo');
+                
+                if (myInfo) myInfo.innerHTML = `<span style="color:#007bff; font-weight:bold;">${CURRENT_TAIKO_ID}</span><br>R: ${Math.round(CURRENT_USER_RATING)}`;
+                if (oppInfo) oppInfo.innerHTML = `<span style="color:#e44d26; font-weight:bold;">${opponentXId}</span><br>R: ${Math.round(opponentRating)}`;
             });
 
             const songs = selectRandomSongs(3);
@@ -570,7 +573,7 @@
                     const oppReported = IS_PLAYER_ONE ? d.p2Reported : d.p1Reported;
                     
                     if (oppReported) {
-                        opponentMatchListener(); 
+                        opponentMatchListener(); // 解除
                         opponentReportedResult = IS_PLAYER_ONE ? d.p2Result : d.p1Result;
                         calcResult();
                     }
